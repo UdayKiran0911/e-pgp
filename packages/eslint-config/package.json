@@ -1,0 +1,6 @@
+{
+  "name": "@epg/eslint-config",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./no-raw-design-values.mjs"
+}

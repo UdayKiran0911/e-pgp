@@ -1,0 +1,20 @@
+echo "pre-push: lint + typecheck + unit + integration tests"
+echo "(full e2e runs in CI, not here — see CLAUDE.md)"
+echo ""
+
+pnpm lint || exit 1
+pnpm typecheck || exit 1
+pnpm test || exit 1
+
+if [ -z "$SKIP_INTEGRATION_TESTS" ]; then
+  if ! docker compose exec -T postgres pg_isready -U epg >/dev/null 2>&1; then
+    echo ""
+    echo "pre-push: integration tests need Postgres running."
+    echo "  Start it with: docker compose up -d postgres"
+    echo "  Or skip once with: SKIP_INTEGRATION_TESTS=1 git push"
+    exit 1
+  fi
+  pnpm test:integration || exit 1
+else
+  echo "pre-push: SKIP_INTEGRATION_TESTS set — skipping integration tests."
+fi

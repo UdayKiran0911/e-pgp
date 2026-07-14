@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: epg
+      POSTGRES_PASSWORD: epg_dev_password
+      POSTGRES_DB: epg_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - epg_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U epg -d epg_platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://epg:epg_dev_password@postgres:5432/epg_platform?schema=public
+      PORT: 4000
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-every-environment}
+    ports:
+      - "4000:4000"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "3000:3000"
+
+volumes:
+  epg_postgres_data:

@@ -1,0 +1,24 @@
+/*
+ * Global reset only. Every color, spacing, and typography value in the
+ * product comes from @epg/design-tokens via the Ant Design ConfigProvider
+ * theme (see src/app/layout.tsx) — this file must not add any of its own.
+ */
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}

@@ -1,0 +1,72 @@
+// EPG Platform database schema.
+// Extended progressively as Phase 4 (Data & API Design) and Phase 5
+// (Core Platform Modules) tasks are completed — see /roadmap.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]
+  projects Project[]
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  name           String
+  role           Role     @default(MEMBER)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  GOVERNANCE_LEAD
+  MEMBER
+  AUDITOR
+}
+
+model Project {
+  id             String   @id @default(uuid())
+  name           String
+  status         ProjectStatus @default(DRAFT)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  auditLogs AuditLog[]
+}
+
+enum ProjectStatus {
+  DRAFT
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
+}
+
+// Append-only audit trail — every governed action against a project is
+// recorded here. Never updated or deleted, only inserted.
+model AuditLog {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  actorId   String
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}

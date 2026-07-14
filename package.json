@@ -1,0 +1,28 @@
+{
+  "name": "epg-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Enterprise Project Governance Platform - monorepo root",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
+    "test:e2e": "turbo run test:e2e",
+    "test:all": "turbo run lint typecheck test",
+    "ui-audit": "node scripts/ui-audit.js",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  }
+}
