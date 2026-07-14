@@ -1,17 +1,21 @@
 # Phase 8 — Platform Engineering
 
-**Status:** Not Started
+**Status:** In Progress
 **Deliverables:** Integration Specifications, API Connectors, Extension Framework
 
 ## Modules
 
 ### Module 1: Authentication
 - [ ] Task 1.1: Build production authentication
-  - [ ] Subtask 1.1.1: Implement JWT-based auth in NestJS
-    - [ ] Activity: `AuthModule` with login/refresh/logout
-    - [ ] Activity: Password hashing + session/token invalidation
+  - [x] Subtask 1.1.1: Implement JWT-based auth in NestJS
+    - [x] Activity: `AuthModule` with register/login/`GET /auth/me` (`apps/api/src/auth`) — registration creates an Organization + its first ADMIN user
+    - [x] Activity: Password hashing (bcryptjs, 12 salt rounds) + `isActive` flag for deactivation; explicit logout/refresh endpoints not yet needed (short-lived 8h JWT, no refresh-token rotation yet)
   - [ ] Subtask 1.1.2: Add SSO support
     - [ ] Activity: Integrate SAML/OIDC for enterprise SSO
+- [x] Task 1.2: Web auth UI
+  - [x] Subtask 1.2.1: Login/register pages
+    - [x] Activity: `/login` and `/register` pages (`apps/web/src/app/login`, `.../register`)
+    - [x] Activity: `AuthProvider` context (token persisted in localStorage — move to httpOnly cookie in Phase 9 hardening) + `RequireAuth` route guard
 
 ### Module 2: Notifications
 - [ ] Task 2.1: Build the notification system

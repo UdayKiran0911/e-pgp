@@ -18,10 +18,10 @@ Full product vision: [docs/EPG_Platform_Master_Product_Phases.md](docs/EPG_Platf
 | 2 | Enterprise Architecture | [roadmap/phase2.md](roadmap/phase2.md) | Not Started |
 | 3 | UI / UX Design | [roadmap/phase3.md](roadmap/phase3.md) | In Progress |
 | 4 | Data & API Design | [roadmap/phase4.md](roadmap/phase4.md) | In Progress |
-| 5 | Core Platform Modules | [roadmap/phase5.md](roadmap/phase5.md) | Not Started |
+| 5 | Core Platform Modules | [roadmap/phase5.md](roadmap/phase5.md) | In Progress |
 | 6 | Governance & Delivery Modules | [roadmap/phase6.md](roadmap/phase6.md) | Not Started |
 | 7 | Intelligence Platform | [roadmap/phase7.md](roadmap/phase7.md) | Not Started |
-| 8 | Platform Engineering | [roadmap/phase8.md](roadmap/phase8.md) | Not Started |
+| 8 | Platform Engineering | [roadmap/phase8.md](roadmap/phase8.md) | In Progress |
 | 9 | Security & Compliance | [roadmap/phase9.md](roadmap/phase9.md) | In Progress |
 | 10 | Engineering & DevOps | [roadmap/phase10.md](roadmap/phase10.md) | In Progress |
 | 11 | Product Launch | [roadmap/phase11.md](roadmap/phase11.md) | Not Started |
@@ -29,7 +29,11 @@ Full product vision: [docs/EPG_Platform_Master_Product_Phases.md](docs/EPG_Platf
 
 ## Current focus
 
-The project is in its initial scaffolding stage: monorepo, both apps,
-design tokens, testing harness, and DevOps baseline are in place (see the
-checked items in phases 3, 4, 9, and 10). No phase is fully complete yet —
-none have moved to [roadmap_completed.md](roadmap_completed.md).
+Scaffolding (monorepo, design tokens, testing harness, DevOps baseline) is
+in place per phases 3, 4, 9, and 10. On top of that, the foundational
+product surface is now live: Authentication (Phase 8), Organization
+Management, User Management, and RBAC (Phase 5) — register/login, an
+org-scoped user directory, and role-gated mutations, both API and UI. No
+phase is fully complete yet — none have moved to
+[roadmap_completed.md](roadmap_completed.md). Next up per the roadmap:
+Project Portfolio and Governance Workflow (Phase 5 Modules 5–6).

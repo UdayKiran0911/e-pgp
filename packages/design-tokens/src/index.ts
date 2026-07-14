@@ -135,6 +135,15 @@ export const zIndex = {
   tooltip: 1500,
 } as const;
 
+// Fixed max-widths for centered content containers (auth cards, narrow
+// forms, dialogs). Not for page layout — use breakpoint for that.
+export const containerWidth = {
+  xs: '320px',
+  sm: '400px',
+  md: '480px',
+  lg: '640px',
+} as const;
+
 export const tokens = {
   color,
   semanticColor,
@@ -144,6 +153,7 @@ export const tokens = {
   typography,
   breakpoint,
   zIndex,
+  containerWidth,
 } as const;
 
 export type Tokens = typeof tokens;

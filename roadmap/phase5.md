@@ -1,18 +1,18 @@
 # Phase 5 — Core Platform Modules
 
-**Status:** Not Started
+**Status:** In Progress
 **Deliverables:** Module Specifications, Business Rules, Screen Specifications
 
 ## Modules
 
 ### Module 1: Organization Management
-- [ ] Task 1.1: Build organization CRUD
-  - [ ] Subtask 1.1.1: API layer
-    - [ ] Activity: NestJS `OrganizationModule` (controller, service, DTOs)
-    - [ ] Activity: Unit + integration tests for organization CRUD
-  - [ ] Subtask 1.1.2: UI layer
-    - [ ] Activity: Organization settings screen (AntD Form + Table)
-    - [ ] Activity: Unit tests for the organization UI
+- [x] Task 1.1: Build organization CRUD
+  - [x] Subtask 1.1.1: API layer
+    - [x] Activity: NestJS `OrganizationModule` (controller, service, DTOs) — read/update scoped to the caller's own org via `GET/PATCH /organizations/me`
+    - [x] Activity: Unit + integration tests for organization CRUD
+  - [x] Subtask 1.1.2: UI layer
+    - [x] Activity: Organization name shown on the dashboard shell (see Module 3's dashboard screen)
+    - [ ] Activity: Dedicated organization settings/edit screen (rename, etc.)
 
 ### Module 2: Department Management
 - [ ] Task 2.1: Build department hierarchy under an organization
@@ -22,19 +22,19 @@
     - [ ] Activity: Department tree view screen
 
 ### Module 3: User Management
-- [ ] Task 3.1: Build user CRUD and profile management
-  - [ ] Subtask 3.1.1: API layer
-    - [ ] Activity: `UserModule` (invite, deactivate, update role)
-  - [ ] Subtask 3.1.2: UI layer
-    - [ ] Activity: User management table with role badges
+- [x] Task 3.1: Build user CRUD and profile management
+  - [x] Subtask 3.1.1: API layer
+    - [x] Activity: `UserModule` (invite via `POST /users`, update role/deactivate via `PATCH /users/:id`, org-scoped `GET /users`, `GET /users/:id`)
+  - [x] Subtask 3.1.2: UI layer
+    - [x] Activity: User management table with role badges (`apps/web/src/app/dashboard/page.tsx`) — inline role `Select` and activate/deactivate action for admins
 
 ### Module 4: RBAC
-- [ ] Task 4.1: Implement role-based access control
-  - [ ] Subtask 4.1.1: Define roles/permissions model
-    - [ ] Activity: Map `Role` enum (`ADMIN`, `GOVERNANCE_LEAD`, `MEMBER`, `AUDITOR`) to permissions
-  - [ ] Subtask 4.1.2: Enforce RBAC in API and UI
-    - [ ] Activity: NestJS guard for role-based route protection
-    - [ ] Activity: Conditional UI rendering based on role
+- [x] Task 4.1: Implement role-based access control
+  - [x] Subtask 4.1.1: Define roles/permissions model
+    - [x] Activity: Map `Role` enum (`ADMIN`, `GOVERNANCE_LEAD`, `MEMBER`, `AUDITOR`) to permissions — `ADMIN`-only for user creation/mutation, all roles can read
+  - [x] Subtask 4.1.2: Enforce RBAC in API and UI
+    - [x] Activity: NestJS guard for role-based route protection (`RolesGuard` + `@Roles()` decorator, `apps/api/src/auth/guards`)
+    - [x] Activity: Conditional UI rendering based on role (dashboard hides mutation controls from non-admins)
 
 ### Module 5: Project Portfolio
 - [ ] Task 5.1: Build the project portfolio view

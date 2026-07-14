@@ -3,8 +3,9 @@
 // (Core Platform Modules) tasks are completed — see /roadmap.
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -22,14 +23,16 @@ model Organization {
 }
 
 model User {
-  id             String   @id @default(uuid())
-  email          String   @unique
+  id             String       @id @default(uuid())
+  email          String       @unique
   name           String
-  role           Role     @default(MEMBER)
+  passwordHash   String
+  role           Role         @default(MEMBER)
+  isActive       Boolean      @default(true)
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 }
 
 enum Role {
@@ -40,13 +43,13 @@ enum Role {
 }
 
 model Project {
-  id             String   @id @default(uuid())
+  id             String        @id @default(uuid())
   name           String
   status         ProjectStatus @default(DRAFT)
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   auditLogs AuditLog[]
 }

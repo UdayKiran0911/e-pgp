@@ -13,16 +13,19 @@ Semantic Versioning (`MAJOR.MINOR.PATCH`) per deployable app. Bumped by the
 
 | Version | Date | Notes |
 |---|---|---|
+| 0.2.0 | 2026-07-14 | Auth UI: login/register pages, `AuthProvider` context, `RequireAuth` guard, dashboard shell with org-scoped user management table. |
 | 0.1.0 | 2026-07-13 | Initial scaffold: Next.js 16 App Router + Ant Design 6, design tokens wired in, homepage placeholder. |
 
 ## apps/api
 
 | Version | Date | Notes |
 |---|---|---|
+| 0.1.0 | 2026-07-14 | Authentication (register/login/me, JWT + bcryptjs), Organization Management, User Management, and RBAC (`RolesGuard` + `@Roles()`). Adds `passwordHash`/`isActive` to `User`. |
 | 0.0.1 | 2026-07-13 | Initial scaffold: NestJS + Prisma (PostgreSQL via `@prisma/adapter-pg`), health check, base schema (Organization/User/Project/AuditLog). |
 
 ## packages/design-tokens
 
 | Version | Date | Notes |
 |---|---|---|
+| 0.2.0 | 2026-07-14 | Add `containerWidth` scale for centered content containers (auth cards, narrow forms, dialogs). |
 | 0.1.0 | 2026-07-13 | Initial token set: color, spacing, radius, shadow, typography, breakpoints, z-index. |
