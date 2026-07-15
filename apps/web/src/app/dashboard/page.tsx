@@ -135,8 +135,8 @@ export default function DashboardPage() {
   };
 
   return (
-    <Space direction="vertical" size={parseInt(spacing[6], 10)} style={{ width: '100%' }}>
-      {error && <Alert type="error" message={error} showIcon />}
+    <Space orientation="vertical" size={parseInt(spacing[6], 10)} style={{ width: '100%' }}>
+      {error && <Alert type="error" title={error} showIcon />}
 
       <Card>
         <Title level={4} style={{ margin: 0 }}>

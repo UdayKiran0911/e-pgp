@@ -45,7 +45,7 @@ export default function LoginPage() {
         {error && (
           <Alert
             type="error"
-            message={error}
+            title={error}
             showIcon
             style={{ marginBottom: spacing[4] }}
           />
