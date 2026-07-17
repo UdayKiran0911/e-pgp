@@ -10,6 +10,10 @@ Format: `YYYY-MM-DD | <short-hash> | <description>`
 
 <!-- Newest entries at the top -->
 
+2026-07-17 | 144250b | Add Project Portfolio: ProjectModule CRUD with a governed status-transition state machine and audit-log writes; Project Portfolio dashboard UI; fixed Prisma 7 WASM/Jest incompatibility and antd message/App.useApp() deprecation.
+
+2026-07-17 | 013cb45 | Fix health check timeout (1s too strict for a remote database) and antd v6 Alert/Space deprecation warnings.
+
 2026-07-14 | 4cd81aa | Add Authentication, Organization Management, User Management, and RBAC (apps/api: register/login/me, JWT + bcryptjs, RolesGuard; apps/web: login/register pages, dashboard user management table).
 
 2026-07-14 | 1d02763 | Initial scaffold: pnpm/Turborepo monorepo, apps/web (Next.js + Ant Design) and apps/api (NestJS + Prisma/PostgreSQL), design tokens + UI-standards enforcement, roadmap system, Claude Code skills, testing harness with pre-push gate, Docker + GitHub Actions CI.
