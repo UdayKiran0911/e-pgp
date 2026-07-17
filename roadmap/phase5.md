@@ -37,11 +37,11 @@
     - [x] Activity: Conditional UI rendering based on role (dashboard hides mutation controls from non-admins)
 
 ### Module 5: Project Portfolio
-- [ ] Task 5.1: Build the project portfolio view
-  - [ ] Subtask 5.1.1: API layer
-    - [ ] Activity: `ProjectModule` CRUD with status transitions
-  - [ ] Subtask 5.1.2: UI layer
-    - [ ] Activity: Portfolio dashboard listing all projects with status/health
+- [x] Task 5.1: Build the project portfolio view
+  - [x] Subtask 5.1.1: API layer
+    - [x] Activity: `ProjectModule` CRUD with status transitions (`apps/api/src/projects`) — governed lifecycle (DRAFT→ACTIVE→ON_HOLD/COMPLETED→ARCHIVED, terminal ARCHIVED) enforced server-side in `project-status.ts`; writes `AuditLog` entries on create and status change, advancing Phase 4 Module 5's "wire audit writes into every governed mutation"
+  - [x] Subtask 5.1.2: UI layer
+    - [x] Activity: Portfolio dashboard listing all projects with status/health (`apps/web/src/app/dashboard/projects`) — health is currently derived from status via a colored Tag/inline Select restricted to valid transitions; a richer health-scoring signal is a Phase 6/7 concern
 
 ### Module 6: Governance Workflow
 - [ ] Task 6.1: Implement the governance workflow engine (per Phase 2 design)

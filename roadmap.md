@@ -31,9 +31,12 @@ Full product vision: [docs/EPG_Platform_Master_Product_Phases.md](docs/EPG_Platf
 
 Scaffolding (monorepo, design tokens, testing harness, DevOps baseline) is
 in place per phases 3, 4, 9, and 10. On top of that, the foundational
-product surface is now live: Authentication (Phase 8), Organization
-Management, User Management, and RBAC (Phase 5) — register/login, an
-org-scoped user directory, and role-gated mutations, both API and UI. No
-phase is fully complete yet — none have moved to
+product surface is live end-to-end against a real Postgres database:
+Authentication (Phase 8), Organization Management, User Management, RBAC,
+and Project Portfolio (Phase 5) — register/login, an org-scoped user
+directory, role-gated mutations, and governed project status transitions
+(with audit-log writes on create/status-change), all verified in both API
+and UI. No phase is fully complete yet — none have moved to
 [roadmap_completed.md](roadmap_completed.md). Next up per the roadmap:
-Project Portfolio and Governance Workflow (Phase 5 Modules 5–6).
+Governance Workflow (Phase 5 Module 6), or extending audit-log writes to
+the remaining governed mutations (Phase 4 Module 5).

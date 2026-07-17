@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
+  App,
   Button,
   Card,
   Form,
@@ -13,7 +14,6 @@ import {
   Table,
   Tag,
   Typography,
-  message,
 } from 'antd';
 import { useAuth } from '@/lib/auth-context';
 import { api, ApiError } from '@/lib/api-client';
@@ -47,6 +47,7 @@ async function fetchDashboardData(token: string) {
 
 export default function DashboardPage() {
   const { user, token } = useAuth();
+  const { message } = App.useApp();
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [users, setUsers] = useState<PublicUser[]>([]);
   const [loading, setLoading] = useState(true);

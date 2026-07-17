@@ -37,7 +37,8 @@
   - [x] Subtask 5.1.1: Model `AuditLog` as append-only
     - [x] Activity: Add `AuditLog` model tied to `Project`
   - [ ] Subtask 5.1.2: Wire audit writes into every governed mutation
-    - [ ] Activity: Add an interceptor/service that writes an `AuditLog` row on governed actions
+    - [x] Activity: Project create + status-change mutations write an `AuditLog` row directly in `ProjectsService` (`apps/api/src/projects/projects.service.ts`)
+    - [ ] Activity: Extend audit writes to the remaining governed mutations (User role/deactivate, Organization update) — likely worth a shared interceptor once the pattern repeats a third time
 
 ### Module 6: Versioning
 - [ ] Task 6.1: Design entity-level versioning for governed documents

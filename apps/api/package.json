@@ -1,6 +1,6 @@
 {
   "name": "api",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "",
   "author": "",
   "private": true,
@@ -18,8 +18,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:integration": "jest --config ./test/jest-integration.json --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-integration.json --runInBand",
+    "test:e2e": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-e2e.json",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
   },
@@ -55,6 +55,7 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/pg": "^8.20.0",
     "@types/supertest": "^7.0.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",

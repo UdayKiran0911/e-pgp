@@ -47,3 +47,23 @@ export interface UpdateUserInput {
   role?: Role;
   isActive?: boolean;
 }
+
+export type ProjectStatus = 'DRAFT' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'ARCHIVED';
+
+export interface Project {
+  id: string;
+  name: string;
+  status: ProjectStatus;
+  organizationId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProjectInput {
+  name: string;
+}
+
+export interface UpdateProjectInput {
+  name?: string;
+  status?: ProjectStatus;
+}

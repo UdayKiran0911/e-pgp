@@ -1,10 +1,13 @@
 import type {
   AuthResponse,
+  CreateProjectInput,
   CreateUserInput,
   LoginInput,
   Organization,
+  Project,
   PublicUser,
   RegisterInput,
+  UpdateProjectInput,
   UpdateUserInput,
 } from './types';
 
@@ -82,6 +85,22 @@ export const api = {
   updateUser: (token: string, id: string, data: UpdateUserInput) =>
     request<PublicUser>(
       `/users/${id}`,
+      { method: 'PATCH', body: JSON.stringify(data) },
+      token,
+    ),
+
+  listProjects: (token: string) => request<Project[]>('/projects', {}, token),
+
+  createProject: (token: string, data: CreateProjectInput) =>
+    request<Project>(
+      '/projects',
+      { method: 'POST', body: JSON.stringify(data) },
+      token,
+    ),
+
+  updateProject: (token: string, id: string, data: UpdateProjectInput) =>
+    request<Project>(
+      `/projects/${id}`,
       { method: 'PATCH', body: JSON.stringify(data) },
       token,
     ),

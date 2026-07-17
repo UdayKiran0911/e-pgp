@@ -13,3 +13,10 @@ export interface AuthResponseBody {
   accessToken: string;
   user: PublicUserBody;
 }
+
+export interface ProjectBody {
+  id: string;
+  name: string;
+  status: string;
+  organizationId: string;
+}

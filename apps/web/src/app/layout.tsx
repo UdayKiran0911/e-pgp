@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import { ConfigProvider } from "antd";
+import { App, ConfigProvider } from "antd";
 import { antdTheme } from "@epg/design-tokens/antd-theme";
 import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
@@ -20,7 +20,9 @@ export default function RootLayout({
       <body>
         <AntdRegistry>
           <ConfigProvider theme={antdTheme}>
-            <AuthProvider>{children}</AuthProvider>
+            <App>
+              <AuthProvider>{children}</AuthProvider>
+            </App>
           </ConfigProvider>
         </AntdRegistry>
       </body>
