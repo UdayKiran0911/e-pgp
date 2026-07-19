@@ -5,6 +5,14 @@ import { AuditLogService } from '../audit/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { DeploymentStatus } from '../../generated/prisma/client';
 
+interface NotifyCallArgs {
+  organizationId: string;
+  recipientId: string;
+  title: string;
+  body?: string;
+  projectId?: string;
+}
+
 describe('DeploymentApprovalsService', () => {
   let service: DeploymentApprovalsService;
   let prisma: {
@@ -19,7 +27,7 @@ describe('DeploymentApprovalsService', () => {
     customerSignoff: { count: jest.Mock };
   };
   let auditLog: { record: jest.Mock };
-  let notifications: { notify: jest.Mock };
+  let notifications: { notify: jest.Mock<unknown, [NotifyCallArgs]> };
 
   const orgId = 'org-1';
   const actorId = 'user-1';
@@ -50,7 +58,7 @@ describe('DeploymentApprovalsService', () => {
       customerSignoff: { count: jest.fn() },
     };
     auditLog = { record: jest.fn() };
-    notifications = { notify: jest.fn() };
+    notifications = { notify: jest.fn<unknown, [NotifyCallArgs]>() };
     service = new DeploymentApprovalsService(
       prisma as unknown as PrismaService,
       auditLog as unknown as AuditLogService,
@@ -139,10 +147,7 @@ describe('DeploymentApprovalsService', () => {
     expect(notifications.notify).toHaveBeenCalledWith(
       expect.objectContaining({ recipientId: requesterId }),
     );
-    const approvedNotification = notifications.notify.mock.calls[0][0] as {
-      title: string;
-    };
-    expect(approvedNotification.title).toContain('approved');
+    expect(notifications.notify.mock.calls[0][0].title).toContain('approved');
   });
 
   it('blocking a request does not require governance checks and still notifies the requester', async () => {
@@ -165,9 +170,6 @@ describe('DeploymentApprovalsService', () => {
         body: 'Coverage gate still unmet',
       }),
     );
-    const blockedNotification = notifications.notify.mock.calls[0][0] as {
-      title: string;
-    };
-    expect(blockedNotification.title).toContain('blocked');
+    expect(notifications.notify.mock.calls[0][0].title).toContain('blocked');
   });
 });

@@ -9,7 +9,7 @@ describe('KnowledgeArticlesService', () => {
     knowledgeArticle: {
       findMany: jest.Mock;
       findFirst: jest.Mock;
-      create: jest.Mock;
+      create: jest.Mock<unknown, [{ data: { tags: string[] } }]>;
       update: jest.Mock;
     };
   };
@@ -33,7 +33,7 @@ describe('KnowledgeArticlesService', () => {
       knowledgeArticle: {
         findMany: jest.fn(),
         findFirst: jest.fn(),
-        create: jest.fn(),
+        create: jest.fn<unknown, [{ data: { tags: string[] } }]>(),
         update: jest.fn(),
       },
     };
@@ -66,10 +66,9 @@ describe('KnowledgeArticlesService', () => {
       content: article.content,
     });
 
-    const createCall = prisma.knowledgeArticle.create.mock.calls[0][0] as {
-      data: { tags: string[] };
-    };
-    expect(createCall.data.tags).toEqual([]);
+    expect(prisma.knowledgeArticle.create.mock.calls[0][0].data.tags).toEqual(
+      [],
+    );
     expect(auditLog.record).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'KNOWLEDGE_ARTICLE_CREATED' }),
     );
