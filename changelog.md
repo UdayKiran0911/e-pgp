@@ -10,6 +10,8 @@ Format: `YYYY-MM-DD | <short-hash> | <description>`
 
 <!-- Newest entries at the top -->
 
+2026-07-19 | adc3465 | Close the audit-log gap: re-scoped AuditLog to Organization (optional Project), migrated live data with a backfill step, extracted shared AuditLogService now used by every governed mutation (Project, User, Organization).
+
 2026-07-17 | 144250b | Add Project Portfolio: ProjectModule CRUD with a governed status-transition state machine and audit-log writes; Project Portfolio dashboard UI; fixed Prisma 7 WASM/Jest incompatibility and antd message/App.useApp() deprecation.
 
 2026-07-17 | 013cb45 | Fix health check timeout (1s too strict for a remote database) and antd v6 Alert/Space deprecation warnings.
