@@ -78,7 +78,11 @@ export class DocumentsService {
         projectId: document.projectId,
         actorId,
         action: 'DOCUMENT_UPDATED',
-        metadata: { title: document.title, from: existing.version, to: dto.version },
+        metadata: {
+          title: document.title,
+          from: existing.version,
+          to: dto.version,
+        },
       });
     }
 

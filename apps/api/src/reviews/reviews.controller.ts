@@ -53,6 +53,11 @@ export class ReviewsController {
     @Param('id') id: string,
     @Body() dto: UpdateReviewDto,
   ) {
-    return this.reviewsService.update(id, user.organizationId, user.userId, dto);
+    return this.reviewsService.update(
+      id,
+      user.organizationId,
+      user.userId,
+      dto,
+    );
   }
 }

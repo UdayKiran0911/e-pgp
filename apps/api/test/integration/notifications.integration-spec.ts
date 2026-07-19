@@ -67,7 +67,11 @@ describe('Notifications (integration)', () => {
     await prisma.notification.createMany({
       data: [
         { organizationId: orgId, recipientId: adminUserId, title: 'For admin' },
-        { organizationId: orgId, recipientId: memberUserId, title: 'For member' },
+        {
+          organizationId: orgId,
+          recipientId: memberUserId,
+          title: 'For member',
+        },
       ],
     });
   });

@@ -75,7 +75,10 @@ export class DeploymentApprovalsService {
   ) {
     const existing = await this.findOneInOrganization(id, organizationId);
 
-    if (dto.status && !isValidDeploymentTransition(existing.status, dto.status)) {
+    if (
+      dto.status &&
+      !isValidDeploymentTransition(existing.status, dto.status)
+    ) {
       throw new BadRequestException(
         `Cannot move a deployment approval from ${existing.status} to ${dto.status}.`,
       );
@@ -118,7 +121,10 @@ export class DeploymentApprovalsService {
   // and every customer sign-off must be RECEIVED. Vacuously satisfied if a
   // project has neither, so the check never blocks a project that hasn't
   // adopted those registers.
-  private async assertGovernanceReady(organizationId: string, projectId: string) {
+  private async assertGovernanceReady(
+    organizationId: string,
+    projectId: string,
+  ) {
     const [unmetGates, unreceivedSignoffs] = await Promise.all([
       this.prisma.governanceGate.count({
         where: { organizationId, projectId, isMet: false },

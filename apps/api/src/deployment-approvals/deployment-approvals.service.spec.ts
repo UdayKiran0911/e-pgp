@@ -130,15 +130,19 @@ describe('DeploymentApprovalsService', () => {
     expect(auditLog.record).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'DEPLOYMENT_APPROVAL_STATUS_CHANGED',
-        metadata: { from: DeploymentStatus.REQUESTED, to: DeploymentStatus.APPROVED },
+        metadata: {
+          from: DeploymentStatus.REQUESTED,
+          to: DeploymentStatus.APPROVED,
+        },
       }),
     );
     expect(notifications.notify).toHaveBeenCalledWith(
-      expect.objectContaining({
-        recipientId: requesterId,
-        title: expect.stringContaining('approved'),
-      }),
+      expect.objectContaining({ recipientId: requesterId }),
     );
+    const approvedNotification = notifications.notify.mock.calls[0][0] as {
+      title: string;
+    };
+    expect(approvedNotification.title).toContain('approved');
   });
 
   it('blocking a request does not require governance checks and still notifies the requester', async () => {
@@ -158,9 +162,12 @@ describe('DeploymentApprovalsService', () => {
     expect(notifications.notify).toHaveBeenCalledWith(
       expect.objectContaining({
         recipientId: requesterId,
-        title: expect.stringContaining('blocked'),
         body: 'Coverage gate still unmet',
       }),
     );
+    const blockedNotification = notifications.notify.mock.calls[0][0] as {
+      title: string;
+    };
+    expect(blockedNotification.title).toContain('blocked');
   });
 });

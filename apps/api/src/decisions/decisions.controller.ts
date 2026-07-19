@@ -36,10 +36,7 @@ export class DecisionsController {
 
   @Get(':id')
   findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-    return this.decisionsService.findOneInOrganization(
-      id,
-      user.organizationId,
-    );
+    return this.decisionsService.findOneInOrganization(id, user.organizationId);
   }
 
   @Post()
@@ -48,11 +45,7 @@ export class DecisionsController {
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateDecisionDto,
   ) {
-    return this.decisionsService.create(
-      user.organizationId,
-      user.userId,
-      dto,
-    );
+    return this.decisionsService.create(user.organizationId, user.userId, dto);
   }
 
   @Patch(':id')

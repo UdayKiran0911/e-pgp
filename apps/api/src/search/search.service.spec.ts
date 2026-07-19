@@ -51,7 +51,10 @@ describe('SearchService', () => {
 
     expect(prisma.risk.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { organizationId: orgId, title: { contains: 'outage', mode: 'insensitive' } },
+        where: {
+          organizationId: orgId,
+          title: { contains: 'outage', mode: 'insensitive' },
+        },
       }),
     );
     expect(prisma.sop.findMany).toHaveBeenCalledWith(

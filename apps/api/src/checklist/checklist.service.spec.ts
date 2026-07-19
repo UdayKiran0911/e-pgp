@@ -63,7 +63,10 @@ describe('ChecklistService', () => {
     prisma.project.findFirst.mockResolvedValue(null);
 
     await expect(
-      service.create(orgId, actorId, { projectId: project.id, title: item.title }),
+      service.create(orgId, actorId, {
+        projectId: project.id,
+        title: item.title,
+      }),
     ).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.checklistItem.create).not.toHaveBeenCalled();
   });
@@ -110,7 +113,10 @@ describe('ChecklistService', () => {
 
   it('does not write an audit log entry when isDone is unchanged', async () => {
     prisma.checklistItem.findFirst.mockResolvedValue(item);
-    prisma.checklistItem.update.mockResolvedValue({ ...item, title: 'Renamed' });
+    prisma.checklistItem.update.mockResolvedValue({
+      ...item,
+      title: 'Renamed',
+    });
 
     await service.update(item.id, orgId, actorId, { title: 'Renamed' });
 

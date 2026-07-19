@@ -4,11 +4,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import {
-  AuthResponseBody,
-  ChecklistItemBody,
-  ProjectBody,
-} from './test-types';
+import { AuthResponseBody, ChecklistItemBody, ProjectBody } from './test-types';
 
 /**
  * Integration test: exercises Checklist item CRUD + toggle, RBAC, and org

@@ -92,10 +92,14 @@ describe('Search (integration)', () => {
       where: { name: { in: [orgAName, orgBName] } },
     });
     const orgIds = orgs.map((o) => o.id);
-    await prisma.auditLog.deleteMany({ where: { organizationId: { in: orgIds } } });
+    await prisma.auditLog.deleteMany({
+      where: { organizationId: { in: orgIds } },
+    });
     await prisma.risk.deleteMany({ where: { organizationId: { in: orgIds } } });
     await prisma.sop.deleteMany({ where: { organizationId: { in: orgIds } } });
-    await prisma.project.deleteMany({ where: { organizationId: { in: orgIds } } });
+    await prisma.project.deleteMany({
+      where: { organizationId: { in: orgIds } },
+    });
     await prisma.user.deleteMany({
       where: { email: { in: [orgAAdminEmail, orgBAdminEmail] } },
     });

@@ -21,7 +21,9 @@ import { Role } from '../../generated/prisma/client';
 @Controller('governance-gates')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class GovernanceGatesController {
-  constructor(private readonly governanceGatesService: GovernanceGatesService) {}
+  constructor(
+    private readonly governanceGatesService: GovernanceGatesService,
+  ) {}
 
   @Get()
   findAll(

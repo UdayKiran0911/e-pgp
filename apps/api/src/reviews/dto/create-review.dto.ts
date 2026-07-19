@@ -1,4 +1,10 @@
-import { IsEnum, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import {
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MinLength,
+} from 'class-validator';
 import { ReviewType } from '../../../generated/prisma/client';
 
 export class CreateReviewDto {

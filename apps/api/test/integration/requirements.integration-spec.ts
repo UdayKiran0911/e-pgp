@@ -4,11 +4,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import {
-  AuthResponseBody,
-  ProjectBody,
-  RequirementBody,
-} from './test-types';
+import { AuthResponseBody, ProjectBody, RequirementBody } from './test-types';
 
 /**
  * Integration test: exercises Requirement CRUD, RBAC, and org isolation

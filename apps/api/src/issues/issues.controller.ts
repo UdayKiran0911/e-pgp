@@ -41,10 +41,7 @@ export class IssuesController {
 
   @Post()
   @Roles(Role.ADMIN, Role.GOVERNANCE_LEAD)
-  create(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: CreateIssueDto,
-  ) {
+  create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateIssueDto) {
     return this.issuesService.create(user.organizationId, user.userId, dto);
   }
 
@@ -55,11 +52,6 @@ export class IssuesController {
     @Param('id') id: string,
     @Body() dto: UpdateIssueDto,
   ) {
-    return this.issuesService.update(
-      id,
-      user.organizationId,
-      user.userId,
-      dto,
-    );
+    return this.issuesService.update(id, user.organizationId, user.userId, dto);
   }
 }

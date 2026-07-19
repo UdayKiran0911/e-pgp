@@ -55,6 +55,11 @@ export class ChecklistController {
     @Param('id') id: string,
     @Body() dto: UpdateChecklistItemDto,
   ) {
-    return this.checklistService.update(id, user.organizationId, user.userId, dto);
+    return this.checklistService.update(
+      id,
+      user.organizationId,
+      user.userId,
+      dto,
+    );
   }
 }

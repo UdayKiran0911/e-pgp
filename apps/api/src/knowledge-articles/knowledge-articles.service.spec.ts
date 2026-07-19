@@ -66,9 +66,10 @@ describe('KnowledgeArticlesService', () => {
       content: article.content,
     });
 
-    expect(prisma.knowledgeArticle.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ tags: [] }) }),
-    );
+    const createCall = prisma.knowledgeArticle.create.mock.calls[0][0] as {
+      data: { tags: string[] };
+    };
+    expect(createCall.data.tags).toEqual([]);
     expect(auditLog.record).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'KNOWLEDGE_ARTICLE_CREATED' }),
     );

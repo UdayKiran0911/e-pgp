@@ -36,10 +36,7 @@ export class DocumentsController {
 
   @Get(':id')
   findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-    return this.documentsService.findOneInOrganization(
-      id,
-      user.organizationId,
-    );
+    return this.documentsService.findOneInOrganization(id, user.organizationId);
   }
 
   @Post()

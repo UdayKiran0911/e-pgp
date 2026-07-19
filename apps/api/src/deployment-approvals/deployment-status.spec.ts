@@ -30,9 +30,9 @@ describe('isValidDeploymentTransition', () => {
   it('never allows a transition out of APPROVED', () => {
     for (const to of Object.values(DeploymentStatus)) {
       if (to === DeploymentStatus.APPROVED) continue;
-      expect(
-        isValidDeploymentTransition(DeploymentStatus.APPROVED, to),
-      ).toBe(false);
+      expect(isValidDeploymentTransition(DeploymentStatus.APPROVED, to)).toBe(
+        false,
+      );
     }
   });
 });

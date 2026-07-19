@@ -94,24 +94,48 @@ export class SearchService {
     ]);
 
     return [
-      ...risks.map((r) => this.toResult('Risk', r.id, r.title, r.projectId, r.description)),
-      ...issues.map((r) => this.toResult('Issue', r.id, r.title, r.projectId, r.description)),
-      ...decisions.map((r) => this.toResult('Decision', r.id, r.title, r.projectId, r.decision)),
+      ...risks.map((r) =>
+        this.toResult('Risk', r.id, r.title, r.projectId, r.description),
+      ),
+      ...issues.map((r) =>
+        this.toResult('Issue', r.id, r.title, r.projectId, r.description),
+      ),
+      ...decisions.map((r) =>
+        this.toResult('Decision', r.id, r.title, r.projectId, r.decision),
+      ),
       ...changeRequests.map((r) =>
-        this.toResult('Change Request', r.id, r.title, r.projectId, r.description),
+        this.toResult(
+          'Change Request',
+          r.id,
+          r.title,
+          r.projectId,
+          r.description,
+        ),
       ),
       ...requirements.map((r) =>
         this.toResult('Requirement', r.id, r.title, r.projectId, r.description),
       ),
-      ...reviews.map((r) => this.toResult('Review', r.id, r.title, r.projectId, r.description)),
-      ...documents.map((r) => this.toResult('Document', r.id, r.title, r.projectId, r.url)),
+      ...reviews.map((r) =>
+        this.toResult('Review', r.id, r.title, r.projectId, r.description),
+      ),
+      ...documents.map((r) =>
+        this.toResult('Document', r.id, r.title, r.projectId, r.url),
+      ),
       ...sops.map((r) => this.toResult('SOP', r.id, r.title, null, r.content)),
       ...articles.map((r) =>
         this.toResult('Knowledge Article', r.id, r.title, null, r.content),
       ),
-      ...departments.map((r) => this.toResult('Department', r.id, r.name, null, null)),
+      ...departments.map((r) =>
+        this.toResult('Department', r.id, r.name, null, null),
+      ),
       ...customerSignoffs.map((r) =>
-        this.toResult('Customer Sign-off', r.id, r.title, r.projectId, r.customerName),
+        this.toResult(
+          'Customer Sign-off',
+          r.id,
+          r.title,
+          r.projectId,
+          r.customerName,
+        ),
       ),
     ];
   }
