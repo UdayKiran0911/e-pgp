@@ -36,9 +36,10 @@
 - [x] Task 5.1: Design the append-only audit trail
   - [x] Subtask 5.1.1: Model `AuditLog` as append-only
     - [x] Activity: Add `AuditLog` model tied to `Project`
-  - [ ] Subtask 5.1.2: Wire audit writes into every governed mutation
-    - [x] Activity: Project create + status-change mutations write an `AuditLog` row directly in `ProjectsService` (`apps/api/src/projects/projects.service.ts`)
-    - [ ] Activity: Extend audit writes to the remaining governed mutations (User role/deactivate, Organization update) — likely worth a shared interceptor once the pattern repeats a third time
+    - [x] Activity: Re-scope `AuditLog` to the `Organization` (required) with an optional `Project` reference, so org-wide actions (not just project actions) have somewhere to attach — migrated live data via a backfill step (`prisma/migrations/20260717000000_auditlog_organization_scope`)
+  - [x] Subtask 5.1.2: Wire audit writes into every governed mutation
+    - [x] Activity: Extracted a shared `AuditLogService` (`apps/api/src/audit`) once the inline `prisma.auditLog.create` pattern repeated a third time — every governed mutation now writes through it, never Prisma directly
+    - [x] Activity: Project create + status-change (`PROJECT_CREATED`, `PROJECT_STATUS_CHANGED`), User role change + activate/deactivate (`USER_ROLE_CHANGED`, `USER_DEACTIVATED`, `USER_REACTIVATED`), and Organization rename (`ORGANIZATION_UPDATED`) all write audit entries — verified end-to-end against a real database in integration tests
 
 ### Module 6: Versioning
 - [ ] Task 6.1: Design entity-level versioning for governed documents

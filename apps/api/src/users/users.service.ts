@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditLogService } from '../audit/audit-log.service';
 import { toPublicUser } from '../common/to-public-user';
 import { PublicUser } from '../auth/auth.types';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -14,7 +15,10 @@ const SALT_ROUNDS = 12;
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditLog: AuditLogService,
+  ) {}
 
   async findAllInOrganization(organizationId: string): Promise<PublicUser[]> {
     const users = await this.prisma.user.findMany({
@@ -64,13 +68,34 @@ export class UsersService {
   async update(
     id: string,
     organizationId: string,
+    actorId: string,
     dto: UpdateUserDto,
   ): Promise<PublicUser> {
-    await this.findOneInOrganization(id, organizationId);
+    const existing = await this.findOneInOrganization(id, organizationId);
+
     const user = await this.prisma.user.update({
       where: { id },
       data: dto,
     });
+
+    if (dto.role !== undefined && dto.role !== existing.role) {
+      await this.auditLog.record({
+        organizationId,
+        actorId,
+        action: 'USER_ROLE_CHANGED',
+        metadata: { userId: id, from: existing.role, to: dto.role },
+      });
+    }
+
+    if (dto.isActive !== undefined && dto.isActive !== existing.isActive) {
+      await this.auditLog.record({
+        organizationId,
+        actorId,
+        action: dto.isActive ? 'USER_REACTIVATED' : 'USER_DEACTIVATED',
+        metadata: { userId: id },
+      });
+    }
+
     return toPublicUser(user);
   }
 }

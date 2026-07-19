@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditLogService } from '../audit/audit-log.service';
 import { ProjectStatus } from '../../generated/prisma/client';
 
 describe('ProjectsService', () => {
@@ -12,8 +13,8 @@ describe('ProjectsService', () => {
       create: jest.Mock;
       update: jest.Mock;
     };
-    auditLog: { create: jest.Mock };
   };
+  let auditLog: { record: jest.Mock };
 
   const orgId = 'org-1';
   const otherOrgId = 'org-2';
@@ -35,9 +36,12 @@ describe('ProjectsService', () => {
         create: jest.fn(),
         update: jest.fn(),
       },
-      auditLog: { create: jest.fn() },
     };
-    service = new ProjectsService(prisma as unknown as PrismaService);
+    auditLog = { record: jest.fn() };
+    service = new ProjectsService(
+      prisma as unknown as PrismaService,
+      auditLog as unknown as AuditLogService,
+    );
   });
 
   it('lists projects scoped to an organization', async () => {
@@ -67,12 +71,14 @@ describe('ProjectsService', () => {
     expect(prisma.project.create).toHaveBeenCalledWith({
       data: { name: project.name, organizationId: orgId },
     });
-    const [[auditArgs]] = prisma.auditLog.create.mock.calls as [
-      [{ data: { projectId: string; actorId: string; action: string } }],
-    ];
-    expect(auditArgs.data.projectId).toBe(project.id);
-    expect(auditArgs.data.actorId).toBe(actorId);
-    expect(auditArgs.data.action).toBe('PROJECT_CREATED');
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: orgId,
+        projectId: project.id,
+        actorId,
+        action: 'PROJECT_CREATED',
+      }),
+    );
     expect(result).toEqual(project);
   });
 
@@ -85,7 +91,7 @@ describe('ProjectsService', () => {
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(prisma.project.update).not.toHaveBeenCalled();
-    expect(prisma.auditLog.create).not.toHaveBeenCalled();
+    expect(auditLog.record).not.toHaveBeenCalled();
   });
 
   it('applies a valid status transition and writes a PROJECT_STATUS_CHANGED audit log entry', async () => {
@@ -103,25 +109,15 @@ describe('ProjectsService', () => {
       where: { id: project.id },
       data: { status: ProjectStatus.ACTIVE },
     });
-    const [[auditArgs]] = prisma.auditLog.create.mock.calls as [
-      [
-        {
-          data: {
-            projectId: string;
-            actorId: string;
-            action: string;
-            metadata: { from: ProjectStatus; to: ProjectStatus };
-          };
-        },
-      ],
-    ];
-    expect(auditArgs.data.projectId).toBe(project.id);
-    expect(auditArgs.data.actorId).toBe(actorId);
-    expect(auditArgs.data.action).toBe('PROJECT_STATUS_CHANGED');
-    expect(auditArgs.data.metadata).toEqual({
-      from: ProjectStatus.DRAFT,
-      to: ProjectStatus.ACTIVE,
-    });
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: orgId,
+        projectId: project.id,
+        actorId,
+        action: 'PROJECT_STATUS_CHANGED',
+        metadata: { from: ProjectStatus.DRAFT, to: ProjectStatus.ACTIVE },
+      }),
+    );
     expect(result.status).toBe(ProjectStatus.ACTIVE);
   });
 
@@ -131,7 +127,7 @@ describe('ProjectsService', () => {
 
     await service.update(project.id, orgId, actorId, { name: 'Renamed' });
 
-    expect(prisma.auditLog.create).not.toHaveBeenCalled();
+    expect(auditLog.record).not.toHaveBeenCalled();
   });
 
   it('rejects updating a project that is not in the caller organization', async () => {

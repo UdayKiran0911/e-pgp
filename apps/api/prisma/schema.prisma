@@ -18,8 +18,9 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users    User[]
-  projects Project[]
+  users     User[]
+  projects  Project[]
+  auditLogs AuditLog[]
 }
 
 model User {
@@ -62,14 +63,19 @@ enum ProjectStatus {
   ARCHIVED
 }
 
-// Append-only audit trail — every governed action against a project is
-// recorded here. Never updated or deleted, only inserted.
+// Append-only audit trail — every governed action within an organization is
+// recorded here. Never updated or deleted, only inserted. Every entry
+// belongs to an organization; projectId is set only for project-scoped
+// actions (e.g. status changes) and left null for org-wide ones (e.g. a
+// user's role changing).
 model AuditLog {
-  id        String   @id @default(uuid())
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
-  actorId   String
-  action    String
-  metadata  Json?
-  createdAt DateTime @default(now())
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  projectId      String?
+  project        Project?     @relation(fields: [projectId], references: [id])
+  actorId        String
+  action         String
+  metadata       Json?
+  createdAt      DateTime     @default(now())
 }

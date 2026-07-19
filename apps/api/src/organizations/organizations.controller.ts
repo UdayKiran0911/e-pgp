@@ -24,6 +24,10 @@ export class OrganizationsController {
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: UpdateOrganizationDto,
   ) {
-    return this.organizationsService.update(user.organizationId, dto);
+    return this.organizationsService.update(
+      user.organizationId,
+      user.userId,
+      dto,
+    );
   }
 }

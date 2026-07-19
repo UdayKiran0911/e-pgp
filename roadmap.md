@@ -34,9 +34,10 @@ in place per phases 3, 4, 9, and 10. On top of that, the foundational
 product surface is live end-to-end against a real Postgres database:
 Authentication (Phase 8), Organization Management, User Management, RBAC,
 and Project Portfolio (Phase 5) — register/login, an org-scoped user
-directory, role-gated mutations, and governed project status transitions
-(with audit-log writes on create/status-change), all verified in both API
-and UI. No phase is fully complete yet — none have moved to
-[roadmap_completed.md](roadmap_completed.md). Next up per the roadmap:
-Governance Workflow (Phase 5 Module 6), or extending audit-log writes to
-the remaining governed mutations (Phase 4 Module 5).
+directory, role-gated mutations, and governed project status transitions,
+all verified in both API and UI. The audit trail (Phase 4 Module 5) is now
+fully wired: every governed mutation across Projects, Users, and
+Organizations writes through a shared `AuditLogService`, org-scoped with
+an optional project reference. No phase is fully complete yet — none have
+moved to [roadmap_completed.md](roadmap_completed.md). Next up per the
+roadmap: Governance Workflow (Phase 5 Module 6).

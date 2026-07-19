@@ -1,6 +1,7 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditLogService } from '../audit/audit-log.service';
 import { Role } from '../../generated/prisma/client';
 
 describe('UsersService', () => {
@@ -14,9 +15,11 @@ describe('UsersService', () => {
       update: jest.Mock;
     };
   };
+  let auditLog: { record: jest.Mock };
 
   const orgId = 'org-1';
   const otherOrgId = 'org-2';
+  const actorId = 'admin-1';
   const user = {
     id: 'user-1',
     email: 'member@acme.test',
@@ -39,7 +42,11 @@ describe('UsersService', () => {
         update: jest.fn(),
       },
     };
-    service = new UsersService(prisma as unknown as PrismaService);
+    auditLog = { record: jest.fn() };
+    service = new UsersService(
+      prisma as unknown as PrismaService,
+      auditLog as unknown as AuditLogService,
+    );
   });
 
   it('lists users scoped to an organization, without password hashes', async () => {
@@ -98,8 +105,66 @@ describe('UsersService', () => {
     prisma.user.findFirst.mockResolvedValue(null);
 
     await expect(
-      service.update(user.id, otherOrgId, { role: Role.ADMIN }),
+      service.update(user.id, otherOrgId, actorId, { role: Role.ADMIN }),
     ).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('writes a USER_ROLE_CHANGED audit log entry when the role changes', async () => {
+    prisma.user.findFirst.mockResolvedValue(user);
+    prisma.user.update.mockResolvedValue({ ...user, role: Role.ADMIN });
+
+    await service.update(user.id, orgId, actorId, { role: Role.ADMIN });
+
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: orgId,
+        actorId,
+        action: 'USER_ROLE_CHANGED',
+        metadata: { userId: user.id, from: Role.MEMBER, to: Role.ADMIN },
+      }),
+    );
+  });
+
+  it('writes a USER_DEACTIVATED audit log entry when isActive turns false', async () => {
+    prisma.user.findFirst.mockResolvedValue(user);
+    prisma.user.update.mockResolvedValue({ ...user, isActive: false });
+
+    await service.update(user.id, orgId, actorId, { isActive: false });
+
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: orgId,
+        actorId,
+        action: 'USER_DEACTIVATED',
+        metadata: { userId: user.id },
+      }),
+    );
+  });
+
+  it('writes a USER_REACTIVATED audit log entry when isActive turns true', async () => {
+    const inactiveUser = { ...user, isActive: false };
+    prisma.user.findFirst.mockResolvedValue(inactiveUser);
+    prisma.user.update.mockResolvedValue({ ...user, isActive: true });
+
+    await service.update(user.id, orgId, actorId, { isActive: true });
+
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: orgId,
+        actorId,
+        action: 'USER_REACTIVATED',
+        metadata: { userId: user.id },
+      }),
+    );
+  });
+
+  it('does not write an audit log entry when nothing meaningful changes', async () => {
+    prisma.user.findFirst.mockResolvedValue(user);
+    prisma.user.update.mockResolvedValue(user);
+
+    await service.update(user.id, orgId, actorId, { name: 'Mem Ber' });
+
+    expect(auditLog.record).not.toHaveBeenCalled();
   });
 });

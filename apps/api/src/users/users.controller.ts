@@ -45,6 +45,6 @@ export class UsersController {
     @Param('id') id: string,
     @Body() dto: UpdateUserDto,
   ) {
-    return this.usersService.update(id, user.organizationId, dto);
+    return this.usersService.update(id, user.organizationId, user.userId, dto);
   }
 }

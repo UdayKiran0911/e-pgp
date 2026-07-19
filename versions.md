@@ -21,6 +21,7 @@ Semantic Versioning (`MAJOR.MINOR.PATCH`) per deployable app. Bumped by the
 
 | Version | Date | Notes |
 |---|---|---|
+| 0.3.0 | 2026-07-17 | Closed the audit-log gap (Phase 4 Module 5): re-scoped `AuditLog` to the Organization (required) with an optional Project reference, migrated live data with a backfill step, and extracted a shared `AuditLogService` now used by every governed mutation (Project create/status-change, User role-change/activate/deactivate, Organization rename). |
 | 0.2.0 | 2026-07-17 | Project Portfolio: `ProjectModule` CRUD with a governed status-transition state machine and audit-log writes on create/status-change. Fixed a real Prisma 7 WASM/Jest incompatibility (`--experimental-vm-modules`) blocking integration tests, and the health check's overly strict 1s timeout. |
 | 0.1.0 | 2026-07-14 | Authentication (register/login/me, JWT + bcryptjs), Organization Management, User Management, and RBAC (`RolesGuard` + `@Roles()`). Adds `passwordHash`/`isActive` to `User`. |
 | 0.0.1 | 2026-07-13 | Initial scaffold: NestJS + Prisma (PostgreSQL via `@prisma/adapter-pg`), health check, base schema (Organization/User/Project/AuditLog). |
