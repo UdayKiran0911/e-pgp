@@ -9,7 +9,7 @@ describe('KnowledgeArticlesService', () => {
     knowledgeArticle: {
       findMany: jest.Mock;
       findFirst: jest.Mock;
-      create: jest.Mock<unknown, [{ data: { tags: string[] } }]>;
+      create: jest.Mock<Promise<unknown>, [{ data: { tags: string[] } }]>;
       update: jest.Mock;
     };
   };
@@ -33,7 +33,7 @@ describe('KnowledgeArticlesService', () => {
       knowledgeArticle: {
         findMany: jest.fn(),
         findFirst: jest.fn(),
-        create: jest.fn<unknown, [{ data: { tags: string[] } }]>(),
+        create: jest.fn<Promise<unknown>, [{ data: { tags: string[] } }]>(),
         update: jest.fn(),
       },
     };
