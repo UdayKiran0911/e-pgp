@@ -195,7 +195,7 @@ describe("ProjectDetailPage", () => {
 
     expect(await screen.findByText("Website Revamp")).toBeInTheDocument();
     expect(screen.getByText("Vendor lock-in")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add risk" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Add risk/ })).toBeInTheDocument();
   });
 
   it("switches the Add button label when the Decision Log and Issue Register tabs are selected", async () => {
@@ -209,11 +209,11 @@ describe("ProjectDetailPage", () => {
 
     await user.click(screen.getByRole("tab", { name: "Decision Log" }));
     expect(await screen.findByText("Adopt Postgres over MySQL")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add decision" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Add decision/ })).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "Issue Register" }));
     expect(await screen.findByText("Build failing on main")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add issue" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Add issue/ })).toBeInTheDocument();
   });
 
   it("hides the Add button for a MEMBER on gated tabs but shows it on self-serve tabs", async () => {
@@ -250,19 +250,19 @@ describe("ProjectDetailPage", () => {
     await user.click(screen.getByRole("tab", { name: "Change Requests" }));
     expect(await screen.findByText("Extend deployment window")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Submit change request" })
+      screen.getByRole("button", { name: /Submit change request/ })
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "Reviews" }));
     expect(await screen.findByText("Pen-test the auth flow")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Submit review" })
+      screen.getByRole("button", { name: /Submit review/ })
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "Deployment Governance" }));
     expect(await screen.findByText("Ship v2.0")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Request deployment approval" })
+      screen.getByRole("button", { name: /Request deployment approval/ })
     ).toBeInTheDocument();
   });
 

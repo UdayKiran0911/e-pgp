@@ -17,6 +17,16 @@ if (typeof window !== "undefined" && !window.matchMedia) {
   });
 }
 
+// jsdom doesn't implement ResizeObserver — Ant Design's Tabs (ink bar
+// measurement) and other size-aware components call it on mount.
+if (typeof window !== "undefined" && !window.ResizeObserver) {
+  window.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 afterEach(() => {
   cleanup();
 });
