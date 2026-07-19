@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   Alert,
   App,
@@ -10,13 +11,20 @@ import {
   Input,
   Modal,
   Select,
+  Steps,
   Table,
   Tag,
 } from 'antd';
 import { useAuth } from '@/lib/auth-context';
 import { api, ApiError } from '@/lib/api-client';
 import { semanticColor, spacing } from '@epg/design-tokens';
-import type { CreateProjectInput, Project, ProjectStatus } from '@/lib/types';
+import { glassPanelStyle } from '@/lib/ui-style';
+import type {
+  CreateProjectInput,
+  GovernanceStage,
+  Project,
+  ProjectStatus,
+} from '@/lib/types';
 
 const STATUS_COLOR: Record<ProjectStatus, string> = {
   DRAFT: semanticColor.textSecondary,
@@ -35,6 +43,16 @@ const ALLOWED_TRANSITIONS: Record<ProjectStatus, ProjectStatus[]> = {
   COMPLETED: ['ARCHIVED'],
   ARCHIVED: [],
 };
+
+// Mirrors the backend's governed workflow (apps/api/src/projects/governance-stage.ts)
+// — strictly sequential, one stage at a time.
+const GOVERNANCE_STAGE_ORDER: GovernanceStage[] = [
+  'INITIATION',
+  'PLANNING',
+  'EXECUTION',
+  'MONITORING',
+  'CLOSURE',
+];
 
 async function fetchProjects(token: string) {
   return api.listProjects(token);
@@ -107,6 +125,30 @@ export default function ProjectsPage() {
     }
   };
 
+  const handleGovernanceStepClick = async (
+    projectId: string,
+    currentStage: GovernanceStage,
+    clickedIndex: number,
+  ) => {
+    if (!token) return;
+    const nextStage = GOVERNANCE_STAGE_ORDER[GOVERNANCE_STAGE_ORDER.indexOf(currentStage) + 1];
+    if (!nextStage || GOVERNANCE_STAGE_ORDER[clickedIndex] !== nextStage) {
+      void message.info('Governance stages advance one at a time.');
+      return;
+    }
+    try {
+      await api.updateProject(token, projectId, { governanceStage: nextStage });
+      void message.success('Governance stage advanced.');
+      await reload();
+    } catch (err) {
+      void message.error(
+        err instanceof ApiError
+          ? err.message
+          : 'Failed to advance the governance stage.',
+      );
+    }
+  };
+
   return (
     <>
       {error && (
@@ -119,6 +161,7 @@ export default function ProjectsPage() {
       )}
 
       <Card
+        style={glassPanelStyle}
         title="Project Portfolio"
         extra={
           canManage && (
@@ -134,7 +177,13 @@ export default function ProjectsPage() {
           dataSource={projects}
           pagination={false}
           columns={[
-            { title: 'Name', dataIndex: 'name' },
+            {
+              title: 'Name',
+              dataIndex: 'name',
+              render: (name: string, record) => (
+                <Link href={`/dashboard/projects/${record.id}`}>{name}</Link>
+              ),
+            },
             {
               title: 'Status / Health',
               dataIndex: 'status',
@@ -156,6 +205,26 @@ export default function ProjectsPage() {
                 ) : (
                   <Tag color={STATUS_COLOR[status]}>{status}</Tag>
                 ),
+            },
+            {
+              title: 'Governance Stage',
+              dataIndex: 'governanceStage',
+              render: (stage: GovernanceStage, record) => (
+                <Steps
+                  size="small"
+                  current={GOVERNANCE_STAGE_ORDER.indexOf(stage)}
+                  onChange={
+                    canManage
+                      ? (clickedIndex) =>
+                          void handleGovernanceStepClick(record.id, stage, clickedIndex)
+                      : undefined
+                  }
+                  items={GOVERNANCE_STAGE_ORDER.map((value) => ({
+                    title: value,
+                  }))}
+                  style={{ minWidth: 360 }}
+                />
+              ),
             },
             {
               title: 'Created',

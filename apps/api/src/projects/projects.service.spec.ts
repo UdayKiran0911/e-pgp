@@ -2,7 +2,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
-import { ProjectStatus } from '../../generated/prisma/client';
+import { GovernanceStage, ProjectStatus } from '../../generated/prisma/client';
 
 describe('ProjectsService', () => {
   let service: ProjectsService;
@@ -23,6 +23,7 @@ describe('ProjectsService', () => {
     id: 'project-1',
     name: 'Website Revamp',
     status: ProjectStatus.DRAFT,
+    governanceStage: GovernanceStage.INITIATION,
     organizationId: orgId,
     createdAt: new Date('2026-01-01T00:00:00Z'),
     updatedAt: new Date('2026-01-01T00:00:00Z'),
@@ -119,6 +120,48 @@ describe('ProjectsService', () => {
       }),
     );
     expect(result.status).toBe(ProjectStatus.ACTIVE);
+  });
+
+  it('rejects skipping a governance stage without writing or updating', async () => {
+    prisma.project.findFirst.mockResolvedValue(project); // INITIATION
+
+    await expect(
+      service.update(project.id, orgId, actorId, {
+        governanceStage: GovernanceStage.EXECUTION,
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.project.update).not.toHaveBeenCalled();
+    expect(auditLog.record).not.toHaveBeenCalled();
+  });
+
+  it('advances a governance stage by one step and writes a GOVERNANCE_STAGE_ADVANCED audit log entry', async () => {
+    prisma.project.findFirst.mockResolvedValue(project); // INITIATION
+    prisma.project.update.mockResolvedValue({
+      ...project,
+      governanceStage: GovernanceStage.PLANNING,
+    });
+
+    const result = await service.update(project.id, orgId, actorId, {
+      governanceStage: GovernanceStage.PLANNING,
+    });
+
+    expect(prisma.project.update).toHaveBeenCalledWith({
+      where: { id: project.id },
+      data: { governanceStage: GovernanceStage.PLANNING },
+    });
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: orgId,
+        projectId: project.id,
+        actorId,
+        action: 'GOVERNANCE_STAGE_ADVANCED',
+        metadata: {
+          from: GovernanceStage.INITIATION,
+          to: GovernanceStage.PLANNING,
+        },
+      }),
+    );
+    expect(result.governanceStage).toBe(GovernanceStage.PLANNING);
   });
 
   it('updates the name without writing an audit log entry when status is unchanged', async () => {

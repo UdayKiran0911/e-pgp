@@ -44,14 +44,26 @@ pnpm ui-audit        # scans changed frontend files for raw color/size violation
 
 Per-app equivalents live in `apps/web/package.json` and `apps/api/package.json`.
 
-## Testing — non-negotiable
+## Testing — non-negotiable, but batched by phase for now
 
 Testing is not optional on this project. Every change to application code
 must ship with tests that exercise it (unit at minimum; integration when it
-touches the database; e2e for user-facing flows). A pre-push git hook runs
-lint + typecheck + unit + integration tests and **blocks the push** if any
-fail — do not bypass it with `--no-verify`. Full E2E runs in CI on every PR,
-not pre-push (too slow for a local gate).
+touches the database; e2e for user-facing flows) — write them inline with
+the code, don't skip them.
+
+**Cadence while the platform is still taking shape (current mode):** don't
+stop to run the full lint/typecheck/unit/integration cycle, or do manual
+browser/API verification, after every individual module. There are many
+phases and modules ahead — build out a phase's modules first, then run one
+full verification pass at the end of the phase. This changes *when*
+verification happens during a work session, not whether it happens: a
+pre-push git hook still runs lint + typecheck + unit + integration tests
+and **blocks the push** if any fail — do not bypass it with `--no-verify`
+— so everything must pass before it ships regardless of this cadence.
+Once the app takes a more complete shape, this reverts to per-module
+testing.
+
+Full E2E runs in CI on every PR, not pre-push (too slow for a local gate).
 
 ## The roadmap workflow
 

@@ -3,6 +3,7 @@ import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { App, ConfigProvider } from "antd";
 import { antdTheme } from "@epg/design-tokens/antd-theme";
 import { AuthProvider } from "@/lib/auth-context";
+import { pageBackgroundStyle } from "@/lib/ui-style";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body style={pageBackgroundStyle}>
         <AntdRegistry>
           <ConfigProvider theme={antdTheme}>
             <App>

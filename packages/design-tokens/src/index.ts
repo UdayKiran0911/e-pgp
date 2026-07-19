@@ -9,16 +9,30 @@
 
 export const color = {
   primary: {
-    50: '#eef4ff',
-    100: '#d9e6ff',
-    200: '#b3ccff',
-    300: '#80a8ff',
-    400: '#4d7dff',
-    500: '#1a56ff', // brand primary
-    600: '#1443cc',
-    700: '#0f3299',
-    800: '#0a2166',
-    900: '#051133',
+    50: '#f5f3ff',
+    100: '#ede9fe',
+    200: '#ddd6fe',
+    300: '#c4b5fd',
+    400: '#a78bfa',
+    500: '#8b5cf6', // brand primary (violet) — gradient start
+    600: '#7c3aed',
+    700: '#6d28d9',
+    800: '#5b21b6',
+    900: '#4c1d95',
+  },
+  // Gradient end / secondary accent — paired with `primary` for the
+  // "Glass Gradient" look (violet -> cyan). See `gradient.accent`.
+  accent: {
+    50: '#ecfeff',
+    100: '#cffafe',
+    200: '#a5f3fc',
+    300: '#67e8f9',
+    400: '#22d3ee',
+    500: '#06b6d4',
+    600: '#0891b2',
+    700: '#0e7490',
+    800: '#155e75',
+    900: '#164e63',
   },
   neutral: {
     0: '#ffffff',
@@ -36,7 +50,28 @@ export const color = {
   success: { 500: '#1a9d5c', 100: '#dcf5e8' },
   warning: { 500: '#c98a05', 100: '#fbedcd' },
   error: { 500: '#d5372f', 100: '#f9dcda' },
-  info: { 500: '#1a56ff', 100: '#d9e6ff' },
+  info: { 500: '#06b6d4', 100: '#cffafe' },
+} as const;
+
+// "Glass Gradient" theme: violet -> cyan gradients and frosted-glass
+// surfaces layered on top of a soft gradient-mesh page background. Every
+// component using glass must pull from here, never write its own rgba().
+export const gradient = {
+  accent: `linear-gradient(135deg, ${color.primary[500]} 0%, ${color.accent[500]} 100%)`,
+  accentHover: `linear-gradient(135deg, ${color.primary[600]} 0%, ${color.accent[600]} 100%)`,
+  pageMesh: `radial-gradient(at 15% 0%, ${color.primary[100]} 0%, transparent 55%), radial-gradient(at 85% 20%, ${color.accent[100]} 0%, transparent 55%), radial-gradient(at 50% 100%, ${color.primary[50]} 0%, transparent 60%)`,
+} as const;
+
+export const glass = {
+  surface: 'rgba(255, 255, 255, 0.66)',
+  surfaceStrong: 'rgba(255, 255, 255, 0.82)',
+  // Full `border` shorthand values (not just the color) so consuming
+  // components never need to write their own "1px solid ..." literal.
+  border: '1px solid rgba(255, 255, 255, 0.55)',
+  borderStrong: '1px solid rgba(255, 255, 255, 0.75)',
+  blurSm: 'blur(8px)',
+  blurMd: 'blur(16px)',
+  blurLg: 'blur(24px)',
 } as const;
 
 export const semanticColor = {
@@ -82,6 +117,8 @@ export const radius = {
   sm: '4px',
   md: '8px',
   lg: '12px',
+  xl: '16px',
+  '2xl': '24px',
   full: '9999px',
 } as const;
 
@@ -89,6 +126,10 @@ export const shadow = {
   sm: '0 1px 2px rgba(16, 18, 22, 0.06)',
   md: '0 2px 8px rgba(16, 18, 22, 0.10)',
   lg: '0 8px 24px rgba(16, 18, 22, 0.14)',
+  // Gradient-tinted glow — used behind glass panels instead of a neutral
+  // shadow, so elevation reads as "glowing" rather than "gray".
+  glow: '0 8px 32px rgba(139, 92, 246, 0.16), 0 2px 8px rgba(6, 182, 212, 0.10)',
+  glowLg: '0 16px 48px rgba(139, 92, 246, 0.20), 0 4px 16px rgba(6, 182, 212, 0.14)',
 } as const;
 
 export const typography = {
@@ -147,6 +188,8 @@ export const containerWidth = {
 export const tokens = {
   color,
   semanticColor,
+  gradient,
+  glass,
   spacing,
   radius,
   shadow,

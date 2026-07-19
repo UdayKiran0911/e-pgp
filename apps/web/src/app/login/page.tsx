@@ -7,6 +7,7 @@ import { Alert, Button, Card, Form, Input, Typography } from 'antd';
 import { useAuth } from '@/lib/auth-context';
 import { ApiError } from '@/lib/api-client';
 import { spacing, containerWidth } from '@epg/design-tokens';
+import { glassPanelStrongStyle, gradientTextStyle } from '@/lib/ui-style';
 import type { LoginInput } from '@/lib/types';
 
 const { Title, Paragraph } = Typography;
@@ -40,8 +41,12 @@ export default function LoginPage() {
         padding: spacing[6],
       }}
     >
-      <Card style={{ width: '100%', maxWidth: containerWidth.sm }}>
-        <Title level={3}>Sign in</Title>
+      <Card
+        style={{ width: '100%', maxWidth: containerWidth.sm, ...glassPanelStrongStyle }}
+      >
+        <Title level={3} style={gradientTextStyle}>
+          Sign in
+        </Title>
         {error && (
           <Alert
             type="error"

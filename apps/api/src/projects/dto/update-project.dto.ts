@@ -1,5 +1,8 @@
 import { IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
-import { ProjectStatus } from '../../../generated/prisma/client';
+import {
+  GovernanceStage,
+  ProjectStatus,
+} from '../../../generated/prisma/client';
 
 export class UpdateProjectDto {
   @IsOptional()
@@ -10,4 +13,8 @@ export class UpdateProjectDto {
   @IsOptional()
   @IsEnum(ProjectStatus)
   status?: ProjectStatus;
+
+  @IsOptional()
+  @IsEnum(GovernanceStage)
+  governanceStage?: GovernanceStage;
 }

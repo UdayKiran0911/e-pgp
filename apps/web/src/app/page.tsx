@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { Layout, Typography, Card, Space, Button } from "antd";
-import { spacing, semanticColor } from "@epg/design-tokens";
+import { spacing } from "@epg/design-tokens";
 import { useAuth } from "@/lib/auth-context";
+import { glassHeaderStyle, glassPanelStyle, gradientTextStyle } from "@/lib/ui-style";
 
 const { Header, Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
@@ -12,15 +13,15 @@ export default function Home() {
   const { user, loading } = useAuth();
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Header style={{ display: "flex", alignItems: "center" }}>
-        <Title level={4} style={{ color: semanticColor.textOnPrimary, margin: 0 }}>
+    <Layout style={{ minHeight: "100vh", background: "transparent" }}>
+      <Header style={{ ...glassHeaderStyle, display: "flex", alignItems: "center" }}>
+        <Title level={4} style={{ ...gradientTextStyle, margin: 0 }}>
           EPG Platform
         </Title>
       </Header>
-      <Content style={{ padding: spacing[8] }}>
+      <Content style={{ padding: spacing[8], background: "transparent" }}>
         <Space orientation="vertical" size={parseInt(spacing[6], 10)} style={{ width: "100%" }}>
-          <Card>
+          <Card style={glassPanelStyle}>
             <Title level={3}>Standardize. Govern. Audit. Deliver.</Title>
             <Paragraph>
               The Enterprise Project Governance Platform is scaffolded and

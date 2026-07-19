@@ -12,14 +12,14 @@
     - [x] Activity: Unit + integration tests for organization CRUD
   - [x] Subtask 1.1.2: UI layer
     - [x] Activity: Organization name shown on the dashboard shell (see Module 3's dashboard screen)
-    - [ ] Activity: Dedicated organization settings/edit screen (rename, etc.)
+    - [x] Activity: Dedicated organization settings/edit screen (`apps/web/src/app/dashboard/settings`) — `ADMIN`-only rename via `PATCH /organizations/me`, linked from the sidebar's Account gear popover
 
 ### Module 2: Department Management
-- [ ] Task 2.1: Build department hierarchy under an organization
-  - [ ] Subtask 2.1.1: API layer
-    - [ ] Activity: `DepartmentModule` with parent/child relationships
-  - [ ] Subtask 2.1.2: UI layer
-    - [ ] Activity: Department tree view screen
+- [x] Task 2.1: Build department hierarchy under an organization
+  - [x] Subtask 2.1.1: API layer
+    - [x] Activity: `DepartmentModule` with parent/child relationships (`apps/api/src/departments`) — org-level (not project-scoped), self-referential `parentId`, cycle prevention on reparenting, `ADMIN`-only write (mirrors Users), audit-logged (`DEPARTMENT_CREATED`, `DEPARTMENT_UPDATED`)
+  - [x] Subtask 2.1.2: UI layer
+    - [x] Activity: Department tree view screen (`apps/web/src/app/dashboard/departments`) — antd `Tree` built client-side from the flat list
 
 ### Module 3: User Management
 - [x] Task 3.1: Build user CRUD and profile management
@@ -44,32 +44,35 @@
     - [x] Activity: Portfolio dashboard listing all projects with status/health (`apps/web/src/app/dashboard/projects`) — health is currently derived from status via a colored Tag/inline Select restricted to valid transitions; a richer health-scoring signal is a Phase 6/7 concern
 
 ### Module 6: Governance Workflow
-- [ ] Task 6.1: Implement the governance workflow engine (per Phase 2 design)
-  - [ ] Subtask 6.1.1: API layer
-    - [ ] Activity: Workflow state machine service
-  - [ ] Subtask 6.1.2: UI layer
-    - [ ] Activity: Workflow status stepper component
+- [x] Task 6.1: Implement the governance workflow engine (per Phase 2 design)
+  - [x] Subtask 6.1.1: API layer
+    - [x] Activity: Workflow state machine service (`apps/api/src/projects/governance-stage.ts`) — a `governanceStage` field on `Project` (INITIATION → PLANNING → EXECUTION → MONITORING → CLOSURE), strictly sequential and independent of `status` (health vs. governance progress are separate concerns); enforced in `ProjectsService.update`, `ADMIN`/`GOVERNANCE_LEAD` only, writes a `GOVERNANCE_STAGE_ADVANCED` audit log entry
+  - [x] Subtask 6.1.2: UI layer
+    - [x] Activity: Workflow status stepper component (`apps/web/src/app/dashboard/projects`) — antd `Steps` per project, click-to-advance restricted to the one valid next stage, read-only for non-managers
 
 ### Module 7: Document Management
 - [ ] Task 7.1: Build document upload/versioning
   - [ ] Subtask 7.1.1: API layer
-    - [ ] Activity: `DocumentModule` with S3-compatible storage integration
+    - [x] Activity: `DocumentModule`, simplified: link-based register (title + external URL + a version label) rather than native upload (`apps/api/src/documents`) — `ADMIN`/`GOVERNANCE_LEAD` write, audit-logged (`DOCUMENT_ADDED`, `DOCUMENT_UPDATED`)
+    - [ ] Activity: S3-compatible storage integration — not built; deliberately deferred, needs a real infra decision (bucket/provider, upload flow) rather than the link-based MVP
   - [ ] Subtask 7.1.2: UI layer
-    - [ ] Activity: Document list + version history screen
+    - [x] Activity: Document list screen — a tab on the project detail page (`apps/web/src/app/dashboard/projects/[id]`), title links out to the external URL
+    - [ ] Activity: Version history screen — only a single current `version` label is tracked, no history of prior versions
 
 ### Module 8: SOP Library
-- [ ] Task 8.1: Build the standard operating procedure library
-  - [ ] Subtask 8.1.1: API layer
-    - [ ] Activity: `SopModule` CRUD with categorization
-  - [ ] Subtask 8.1.2: UI layer
-    - [ ] Activity: SOP library browser screen
+- [x] Task 8.1: Build the standard operating procedure library
+  - [x] Subtask 8.1.1: API layer
+    - [x] Activity: `SopModule` CRUD with categorization (`apps/api/src/sops`) — org-level (not project-scoped), free-text `category`, `ADMIN`/`GOVERNANCE_LEAD` write, audit-logged (`SOP_CREATED`, `SOP_UPDATED`)
+  - [x] Subtask 8.1.2: UI layer
+    - [x] Activity: SOP library browser screen (`apps/web/src/app/dashboard/sops`) — table with category tags and expandable content preview
 
 ### Module 9: Checklist Engine
 - [ ] Task 9.1: Build the configurable checklist engine
   - [ ] Subtask 9.1.1: API layer
-    - [ ] Activity: `ChecklistModule` with templated + per-project checklists
-  - [ ] Subtask 9.1.2: UI layer
-    - [ ] Activity: Interactive checklist component with progress tracking
+    - [x] Activity: `ChecklistModule` with per-project checklists (`apps/api/src/checklist`) — simple title + `isDone` toggle, `ADMIN`/`GOVERNANCE_LEAD` write, audit-logged (`CHECKLIST_ITEM_ADDED`, `CHECKLIST_ITEM_TOGGLED`)
+    - [ ] Activity: Templated checklists (reusable templates applied to new projects) — not built; deliberately deferred until the simple per-project version proves useful
+  - [x] Subtask 9.1.2: UI layer
+    - [x] Activity: Interactive checklist component (`apps/web/src/app/dashboard/projects/[id]`) — a tab with a `Checkbox` list; progress tracking (e.g. "3/8 done") not yet surfaced
 
 ## Deliverables Checklist
 - [ ] Module Specifications

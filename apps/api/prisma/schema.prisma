@@ -21,6 +21,21 @@ model Organization {
   users     User[]
   projects  Project[]
   auditLogs AuditLog[]
+  risks           Risk[]
+  decisions       Decision[]
+  issues          Issue[]
+  changeRequests  ChangeRequest[]
+  requirements    Requirement[]
+  reviews         Review[]
+  checklistItems  ChecklistItem[]
+  departments     Department[]
+  sops            Sop[]
+  documents       Document[]
+  governanceGates GovernanceGate[]
+  customerSignoffs CustomerSignoff[]
+  deploymentApprovals DeploymentApproval[]
+  notifications       Notification[]
+  knowledgeArticles   KnowledgeArticle[]
 }
 
 model User {
@@ -44,15 +59,28 @@ enum Role {
 }
 
 model Project {
-  id             String        @id @default(uuid())
-  name           String
-  status         ProjectStatus @default(DRAFT)
-  organizationId String
-  organization   Organization  @relation(fields: [organizationId], references: [id])
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id              String          @id @default(uuid())
+  name            String
+  status          ProjectStatus   @default(DRAFT)
+  governanceStage GovernanceStage @default(INITIATION)
+  organizationId  String
+  organization    Organization    @relation(fields: [organizationId], references: [id])
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   auditLogs AuditLog[]
+  risks            Risk[]
+  decisions        Decision[]
+  issues           Issue[]
+  changeRequests   ChangeRequest[]
+  requirements     Requirement[]
+  reviews          Review[]
+  checklistItems   ChecklistItem[]
+  documents        Document[]
+  governanceGates  GovernanceGate[]
+  customerSignoffs CustomerSignoff[]
+  deploymentApprovals DeploymentApproval[]
+  notifications       Notification[]
 }
 
 enum ProjectStatus {
@@ -61,6 +89,357 @@ enum ProjectStatus {
   ON_HOLD
   COMPLETED
   ARCHIVED
+}
+
+// The standardized delivery workflow every project moves through (Phase 5
+// Module 6), independent of `status` (which tracks health, not governance
+// progress). Strictly forward: each stage can only advance to the next one,
+// CLOSURE is terminal.
+enum GovernanceStage {
+  INITIATION
+  PLANNING
+  EXECUTION
+  MONITORING
+  CLOSURE
+}
+
+// Risk Register (Phase 6 Module 8): risks logged against a project, with
+// severity/likelihood scoring and a lifecycle status. Simple CRUD — no
+// dedicated state machine like Project's status/governanceStage, since the
+// vision doc doesn't call for a governed workflow here, just tracking.
+model Risk {
+  id             String         @id @default(uuid())
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  projectId      String
+  project        Project        @relation(fields: [projectId], references: [id])
+  title          String
+  description    String?
+  severity       RiskSeverity
+  likelihood     RiskLikelihood
+  status         RiskStatus     @default(OPEN)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+enum RiskSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RiskLikelihood {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum RiskStatus {
+  OPEN
+  MITIGATED
+  ACCEPTED
+  CLOSED
+}
+
+// Decision Log (Phase 6 Module 9): key decisions recorded against a
+// project's timeline — what was decided, why, and by whom. Append-only in
+// spirit (edits are allowed for typo fixes, but `decidedAt` is fixed at
+// creation so the timeline order never shifts).
+model Decision {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id])
+  title          String
+  context        String?
+  decision       String
+  decidedById    String
+  decidedAt      DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+// Issue Register (Phase 6 Module 10): issues logged against a project, with
+// priority scoring and a lifecycle status. Simple CRUD, same shape as Risk.
+model Issue {
+  id             String        @id @default(uuid())
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  projectId      String
+  project        Project       @relation(fields: [projectId], references: [id])
+  title          String
+  description    String?
+  priority       IssuePriority
+  status         IssueStatus   @default(OPEN)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+enum IssuePriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+// Change Requests (Phase 6 Module 7): the only register so far with a real
+// approval workflow rather than a free-form status — SUBMITTED must be
+// decided (APPROVED/REJECTED) by a governance role before it can move to
+// IMPLEMENTED; REJECTED and IMPLEMENTED are terminal. See
+// change-request-status.ts for the state machine.
+model ChangeRequest {
+  id             String              @id @default(uuid())
+  organizationId String
+  organization   Organization        @relation(fields: [organizationId], references: [id])
+  projectId      String
+  project        Project             @relation(fields: [projectId], references: [id])
+  title          String
+  description    String?
+  status         ChangeRequestStatus @default(SUBMITTED)
+  requestedById  String
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+}
+
+enum ChangeRequestStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+  IMPLEMENTED
+}
+
+// Requirements (Phase 6 Module 1): requirements tracked against a project
+// for traceability. Simple CRUD + lifecycle status, same shape as Risk.
+model Requirement {
+  id             String            @id @default(uuid())
+  organizationId String
+  organization   Organization      @relation(fields: [organizationId], references: [id])
+  projectId      String
+  project        Project           @relation(fields: [projectId], references: [id])
+  title          String
+  description    String?
+  status         RequirementStatus @default(DRAFT)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+enum RequirementStatus {
+  DRAFT
+  APPROVED
+  IMPLEMENTED
+}
+
+// Reviews (Phase 6 Modules 2, 5, 6 — Architecture/Security/Performance):
+// these three vision-doc modules share an identical shape (submit ->
+// governance decision), so they're one model distinguished by `type`
+// rather than three near-duplicate tables/endpoints. Approval workflow:
+// SUBMITTED must be decided by a governance role; CHANGES_REQUESTED can be
+// resubmitted; APPROVED is terminal. See review-status.ts.
+model Review {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id])
+  type           ReviewType
+  title          String
+  description    String?
+  status         ReviewStatus @default(SUBMITTED)
+  requestedById  String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+enum ReviewType {
+  ARCHITECTURE
+  SECURITY
+  PERFORMANCE
+}
+
+enum ReviewStatus {
+  SUBMITTED
+  APPROVED
+  CHANGES_REQUESTED
+}
+
+// Checklist Engine (Phase 5 Module 9), simplified: per-project checklist
+// items with a done/not-done toggle. A templated-checklist layer (reusable
+// templates applied to new projects) is a natural follow-up once this
+// proves useful, not built preemptively.
+model ChecklistItem {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id])
+  title          String
+  isDone         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+// Department Management (Phase 5 Module 2): org-level hierarchy, not
+// project-scoped. Self-referential parent/child for a tree view.
+model Department {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  parentId       String?
+  parent         Department?  @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children       Department[] @relation("DepartmentHierarchy")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+// SOP Library (Phase 5 Module 8): org-level reference library, not
+// project-scoped. `category` is free text (onboarding, security,
+// deployment, ...) rather than an enum — the set of categories is
+// organization-defined, not a fixed governance scale like risk severity.
+model Sop {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  title          String
+  category       String
+  content        String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+// Document Management (Phase 5 Module 7), simplified: a link-based
+// register (title + external URL + a version label) rather than native
+// file upload/storage. Real S3-compatible storage integration is a
+// separate infra decision, deliberately not made here.
+model Document {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id])
+  title          String
+  url            String
+  version        String       @default("1.0")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+// Governance Gates (Phase 6 Modules 3 + 4 — Development + Testing
+// Governance): same trick as Review — these two vision-doc modules both
+// reduce to "a named gate criterion that must be manually attested as met
+// before a project advances," so one model with a `category` field. Wiring
+// real CI test results into `TESTING` gates (per the vision doc) is a
+// separate integration, deliberately not built here — attestation is
+// manual for now.
+model GovernanceGate {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id])
+  category       GateCategory
+  title          String
+  isMet          Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+enum GateCategory {
+  DEVELOPMENT
+  TESTING
+}
+
+// Customer Sign-off (Phase 6 Module 11), simplified: an internal record of
+// a sign-off request and its outcome. No external sign-off portal or
+// e-signature capture (per the vision doc) — that's a separate,
+// customer-facing surface deliberately not built here.
+model CustomerSignoff {
+  id             String         @id @default(uuid())
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  projectId      String
+  project        Project        @relation(fields: [projectId], references: [id])
+  title          String
+  customerName   String
+  status         SignoffStatus  @default(PENDING)
+  requestedById  String
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+enum SignoffStatus {
+  PENDING
+  RECEIVED
+  DECLINED
+}
+
+// Deployment Governance (Phase 6 Module 12): the final gate before a
+// project ships. Any member can request; ADMIN/GOVERNANCE_LEAD decide, and
+// the service layer blocks APPROVED unless every GovernanceGate on the
+// project is met and every CustomerSignoff is RECEIVED (vacuously true if
+// none exist) — enforced in code, not just the state machine.
+model DeploymentApproval {
+  id             String           @id @default(uuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id])
+  projectId      String
+  project        Project          @relation(fields: [projectId], references: [id])
+  title          String
+  status         DeploymentStatus @default(REQUESTED)
+  requestedById  String
+  notes          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+enum DeploymentStatus {
+  REQUESTED
+  APPROVED
+  BLOCKED
+}
+
+// Notifications (Phase 8): in-app notifications addressed to a single
+// user. MVP scope — storage, list-mine, mark-read, and one real producer
+// (Deployment Governance decisions notify the requester). Wiring a
+// notification into every governed mutation across the platform is a
+// separate follow-up, not built preemptively.
+model Notification {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  projectId      String?
+  project        Project?     @relation(fields: [projectId], references: [id])
+  recipientId    String
+  title          String
+  body           String?
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+}
+
+// Knowledge Repository (Phase 7): org-level, tag-searchable knowledge base
+// articles — broader than the SOP Library's step-by-step procedures (this
+// is free-form reference knowledge: retrospectives, playbooks, FAQs).
+// Feeds Enterprise Search alongside every other text-bearing register.
+model KnowledgeArticle {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  title          String
+  category       String
+  tags           String[]     @default([])
+  content        String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 }
 
 // Append-only audit trail — every governed action within an organization is

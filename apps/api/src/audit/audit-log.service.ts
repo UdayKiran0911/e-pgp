@@ -30,4 +30,13 @@ export class AuditLogService {
       },
     });
   }
+
+  findAllInOrganization(organizationId: string) {
+    return this.prisma.auditLog.findMany({
+      where: { organizationId },
+      orderBy: { createdAt: 'desc' },
+      include: { project: { select: { id: true, name: true } } },
+      take: 200,
+    });
+  }
 }

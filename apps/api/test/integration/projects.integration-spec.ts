@@ -143,6 +143,41 @@ describe('Projects (integration)', () => {
     expect((valid.body as ProjectBody).status).toBe('ACTIVE');
   });
 
+  it('advances a governance stage one step at a time and rejects skipping ahead', async () => {
+    const created = await request(app.getHttpServer())
+      .post('/projects')
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .send({ name: 'Governance Stage Test Project' });
+    const projectId = (created.body as ProjectBody).id;
+
+    const skip = await request(app.getHttpServer())
+      .patch(`/projects/${projectId}`)
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .send({ governanceStage: 'EXECUTION' }); // INITIATION -> EXECUTION skips PLANNING
+    expect(skip.status).toBe(400);
+
+    const advance = await request(app.getHttpServer())
+      .patch(`/projects/${projectId}`)
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .send({ governanceStage: 'PLANNING' }); // INITIATION -> PLANNING is allowed
+    expect(advance.status).toBe(200);
+    expect((advance.body as ProjectBody).governanceStage).toBe('PLANNING');
+  });
+
+  it('rejects a MEMBER advancing a governance stage', async () => {
+    const created = await request(app.getHttpServer())
+      .post('/projects')
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .send({ name: 'Governance Stage RBAC Test Project' });
+    const projectId = (created.body as ProjectBody).id;
+
+    const forbidden = await request(app.getHttpServer())
+      .patch(`/projects/${projectId}`)
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send({ governanceStage: 'PLANNING' });
+    expect(forbidden.status).toBe(403);
+  });
+
   it('does not let an org B admin see or modify an org A project', async () => {
     const created = await request(app.getHttpServer())
       .post('/projects')

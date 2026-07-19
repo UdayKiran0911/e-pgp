@@ -1,0 +1,169 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import request from 'supertest';
+import { App } from 'supertest/types';
+import { AppModule } from '../../src/app.module';
+import { PrismaService } from '../../src/prisma/prisma.service';
+import { AuthResponseBody, DocumentBody, ProjectBody } from './test-types';
+
+/**
+ * Integration test: exercises Document CRUD (link-based, project-scoped),
+ * RBAC, and org isolation against a real Postgres instance (see
+ * docker-compose.yml -> `postgres`). Run `docker compose up -d postgres`
+ * before `pnpm test:integration`.
+ */
+describe('Documents (integration)', () => {
+  let app: INestApplication<App>;
+  let prisma: PrismaService;
+
+  const suffix = Date.now();
+  const orgAName = `Documents Integration Org A ${suffix}`;
+  const orgBName = `Documents Integration Org B ${suffix}`;
+  const orgAAdminEmail = `doc-org-a-admin-${suffix}@acme.test`;
+  const orgBAdminEmail = `doc-org-b-admin-${suffix}@acme.test`;
+  const memberEmail = `doc-org-a-member-${suffix}@acme.test`;
+  const password = 'super-secret-1';
+
+  let orgAAdminToken: string;
+  let orgBAdminToken: string;
+  let memberToken: string;
+  let orgAProjectId: string;
+
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
+    await app.init();
+    prisma = moduleFixture.get(PrismaService);
+
+    const orgA = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        organizationName: orgAName,
+        name: 'Org A Admin',
+        email: orgAAdminEmail,
+        password,
+      });
+    orgAAdminToken = (orgA.body as AuthResponseBody).accessToken;
+
+    const orgB = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        organizationName: orgBName,
+        name: 'Org B Admin',
+        email: orgBAdminEmail,
+        password,
+      });
+    orgBAdminToken = (orgB.body as AuthResponseBody).accessToken;
+
+    await request(app.getHttpServer())
+      .post('/users')
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .send({ email: memberEmail, name: 'Org A Member', password });
+    const memberLogin = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: memberEmail, password });
+    memberToken = (memberLogin.body as AuthResponseBody).accessToken;
+
+    const project = await request(app.getHttpServer())
+      .post('/projects')
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .send({ name: 'Document Test Project' });
+    orgAProjectId = (project.body as ProjectBody).id;
+  });
+
+  afterAll(async () => {
+    const orgs = await prisma.organization.findMany({
+      where: { name: { in: [orgAName, orgBName] } },
+    });
+    const orgIds = orgs.map((o) => o.id);
+    await prisma.auditLog.deleteMany({
+      where: { organizationId: { in: orgIds } },
+    });
+    await prisma.document.deleteMany({
+      where: { organizationId: { in: orgIds } },
+    });
+    await prisma.project.deleteMany({
+      where: { organizationId: { in: orgIds } },
+    });
+    await prisma.user.deleteMany({
+      where: { email: { in: [orgAAdminEmail, orgBAdminEmail, memberEmail] } },
+    });
+    await prisma.organization.deleteMany({ where: { id: { in: orgIds } } });
+    await app.close();
+  });
+
+  it('lets an ADMIN add a document, defaulting to version 1.0', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/documents')
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .send({
+        projectId: orgAProjectId,
+        title: 'Solution Design Doc',
+        url: 'https://docs.example.com/solution-design',
+      });
+
+    expect(response.status).toBe(201);
+    expect((response.body as DocumentBody).version).toBe('1.0');
+  });
+
+  it('rejects a MEMBER adding a document but allows them to list documents', async () => {
+    const forbidden = await request(app.getHttpServer())
+      .post('/documents')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send({
+        projectId: orgAProjectId,
+        title: 'Should fail',
+        url: 'https://docs.example.com/should-fail',
+      });
+    expect(forbidden.status).toBe(403);
+
+    const list = await request(app.getHttpServer())
+      .get(`/documents?projectId=${orgAProjectId}`)
+      .set('Authorization', `Bearer ${memberToken}`);
+    expect(list.status).toBe(200);
+    expect((list.body as DocumentBody[]).length).toBeGreaterThan(0);
+  });
+
+  it('bumps a document version and writes a DOCUMENT_UPDATED audit log entry', async () => {
+    const created = await request(app.getHttpServer())
+      .post('/documents')
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .send({
+        projectId: orgAProjectId,
+        title: 'API Contract',
+        url: 'https://docs.example.com/api-contract',
+      });
+    const documentId = (created.body as DocumentBody).id;
+
+    const updated = await request(app.getHttpServer())
+      .patch(`/documents/${documentId}`)
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .send({ version: '2.0' });
+    expect(updated.status).toBe(200);
+    expect((updated.body as DocumentBody).version).toBe('2.0');
+
+    const auditEntry = await prisma.auditLog.findFirst({
+      where: { action: 'DOCUMENT_UPDATED', projectId: orgAProjectId },
+      orderBy: { createdAt: 'desc' },
+    });
+    expect(auditEntry).not.toBeNull();
+  });
+
+  it('rejects adding a document against a project from a different organization', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/documents')
+      .set('Authorization', `Bearer ${orgBAdminToken}`)
+      .send({
+        projectId: orgAProjectId,
+        title: 'Cross-org attempt',
+        url: 'https://docs.example.com/cross-org',
+      });
+    expect(response.status).toBe(404);
+  });
+});

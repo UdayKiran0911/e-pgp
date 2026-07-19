@@ -1,6 +1,6 @@
 # Phase 7 — Intelligence Platform
 
-**Status:** Not Started
+**Status:** In Progress
 **Deliverables:** AI Architecture, Prompt Library, Knowledge Graph Design
 
 ## Modules
@@ -34,12 +34,16 @@
 ### Module 6: Knowledge Repository
 - [ ] Task 6.1: Build the organizational knowledge repository
   - [ ] Subtask 6.1.1: Design knowledge ingestion pipeline
-    - [ ] Activity: Draft ingestion pipeline for SOPs, decisions, and past audits
+    - [ ] Activity: Draft ingestion pipeline for SOPs, decisions, and past audits — not built; deliberately deferred, the MVP below is manual entry, not an automated pipeline
+  - [x] Subtask 6.1.2: API + UI layer
+    - [x] Activity: `KnowledgeArticleModule` (`apps/api/src/knowledge-articles`) — org-level, not project-scoped, free-text `category` + `tags: String[]`, `ADMIN`/`GOVERNANCE_LEAD` write, audit-logged (`KNOWLEDGE_ARTICLE_CREATED`, `KNOWLEDGE_ARTICLE_UPDATED`); browser screen (`apps/web/src/app/dashboard/knowledge`) with tag chips and expandable content, new sidebar nav entry
 
 ### Module 7: Enterprise Search
 - [ ] Task 7.1: Build cross-module enterprise search (builds on Phase 4 search architecture)
   - [ ] Subtask 7.1.1: Add semantic search on top of full-text search
-    - [ ] Activity: Prototype embeddings-backed search over documents/decisions
+    - [ ] Activity: Prototype embeddings-backed search over documents/decisions — not built; deliberately deferred, needs a real vector/embeddings infra decision
+  - [x] Subtask 7.1.2: Keyword search MVP
+    - [x] Activity: `SearchModule` (`apps/api/src/search`) — aggregates a case-insensitive `contains` query across every text-bearing register (Risk, Issue, Decision, Change Request, Requirement, Review, Document, SOP, Knowledge Article, Department, Customer Sign-off), org-scoped, capped per type; `apps/web/src/app/dashboard/search` UI with results linking back into the owning project
 
 ### Module 8: Analytics
 - [ ] Task 8.1: Build the analytics module

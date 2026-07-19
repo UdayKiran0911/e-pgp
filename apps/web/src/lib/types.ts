@@ -18,6 +18,10 @@ export interface Organization {
   updatedAt: string;
 }
 
+export interface UpdateOrganizationInput {
+  name: string;
+}
+
 export interface AuthResponse {
   accessToken: string;
   user: PublicUser;
@@ -50,10 +54,18 @@ export interface UpdateUserInput {
 
 export type ProjectStatus = 'DRAFT' | 'ACTIVE' | 'ON_HOLD' | 'COMPLETED' | 'ARCHIVED';
 
+export type GovernanceStage =
+  | 'INITIATION'
+  | 'PLANNING'
+  | 'EXECUTION'
+  | 'MONITORING'
+  | 'CLOSURE';
+
 export interface Project {
   id: string;
   name: string;
   status: ProjectStatus;
+  governanceStage: GovernanceStage;
   organizationId: string;
   createdAt: string;
   updatedAt: string;
@@ -66,4 +78,395 @@ export interface CreateProjectInput {
 export interface UpdateProjectInput {
   name?: string;
   status?: ProjectStatus;
+  governanceStage?: GovernanceStage;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  organizationId: string;
+  projectId: string | null;
+  project: { id: string; name: string } | null;
+  actorId: string;
+  action: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export type RiskSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type RiskLikelihood = 'LOW' | 'MEDIUM' | 'HIGH';
+export type RiskStatus = 'OPEN' | 'MITIGATED' | 'ACCEPTED' | 'CLOSED';
+
+export interface Risk {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  title: string;
+  description: string | null;
+  severity: RiskSeverity;
+  likelihood: RiskLikelihood;
+  status: RiskStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRiskInput {
+  projectId: string;
+  title: string;
+  description?: string;
+  severity: RiskSeverity;
+  likelihood: RiskLikelihood;
+}
+
+export interface UpdateRiskInput {
+  title?: string;
+  description?: string;
+  severity?: RiskSeverity;
+  likelihood?: RiskLikelihood;
+  status?: RiskStatus;
+}
+
+export interface Decision {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  title: string;
+  context: string | null;
+  decision: string;
+  decidedById: string;
+  decidedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDecisionInput {
+  projectId: string;
+  title: string;
+  context?: string;
+  decision: string;
+}
+
+export interface UpdateDecisionInput {
+  title?: string;
+  context?: string;
+  decision?: string;
+}
+
+export type IssuePriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type IssueStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+
+export interface Issue {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  title: string;
+  description: string | null;
+  priority: IssuePriority;
+  status: IssueStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateIssueInput {
+  projectId: string;
+  title: string;
+  description?: string;
+  priority: IssuePriority;
+}
+
+export interface UpdateIssueInput {
+  title?: string;
+  description?: string;
+  priority?: IssuePriority;
+  status?: IssueStatus;
+}
+
+export type ChangeRequestStatus =
+  | 'SUBMITTED'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'IMPLEMENTED';
+
+export interface ChangeRequest {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  title: string;
+  description: string | null;
+  status: ChangeRequestStatus;
+  requestedById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateChangeRequestInput {
+  projectId: string;
+  title: string;
+  description?: string;
+}
+
+export interface UpdateChangeRequestInput {
+  title?: string;
+  description?: string;
+  status?: ChangeRequestStatus;
+}
+
+export type RequirementStatus = 'DRAFT' | 'APPROVED' | 'IMPLEMENTED';
+
+export interface Requirement {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  title: string;
+  description: string | null;
+  status: RequirementStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRequirementInput {
+  projectId: string;
+  title: string;
+  description?: string;
+}
+
+export interface UpdateRequirementInput {
+  title?: string;
+  description?: string;
+  status?: RequirementStatus;
+}
+
+export type ReviewType = 'ARCHITECTURE' | 'SECURITY' | 'PERFORMANCE';
+export type ReviewStatus = 'SUBMITTED' | 'APPROVED' | 'CHANGES_REQUESTED';
+
+export interface Review {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  type: ReviewType;
+  title: string;
+  description: string | null;
+  status: ReviewStatus;
+  requestedById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateReviewInput {
+  projectId: string;
+  type: ReviewType;
+  title: string;
+  description?: string;
+}
+
+export interface UpdateReviewInput {
+  title?: string;
+  description?: string;
+  status?: ReviewStatus;
+}
+
+export interface ChecklistItem {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  title: string;
+  isDone: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateChecklistItemInput {
+  projectId: string;
+  title: string;
+}
+
+export interface UpdateChecklistItemInput {
+  title?: string;
+  isDone?: boolean;
+}
+
+export interface Department {
+  id: string;
+  organizationId: string;
+  name: string;
+  parentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDepartmentInput {
+  name: string;
+  parentId?: string;
+}
+
+export interface UpdateDepartmentInput {
+  name?: string;
+  parentId?: string;
+}
+
+export interface Sop {
+  id: string;
+  organizationId: string;
+  title: string;
+  category: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSopInput {
+  title: string;
+  category: string;
+  content: string;
+}
+
+export interface UpdateSopInput {
+  title?: string;
+  category?: string;
+  content?: string;
+}
+
+export interface Document {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  title: string;
+  url: string;
+  version: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDocumentInput {
+  projectId: string;
+  title: string;
+  url: string;
+  version?: string;
+}
+
+export interface UpdateDocumentInput {
+  title?: string;
+  url?: string;
+  version?: string;
+}
+
+export type GateCategory = 'DEVELOPMENT' | 'TESTING';
+
+export interface GovernanceGate {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  category: GateCategory;
+  title: string;
+  isMet: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateGovernanceGateInput {
+  projectId: string;
+  category: GateCategory;
+  title: string;
+}
+
+export interface UpdateGovernanceGateInput {
+  title?: string;
+  isMet?: boolean;
+}
+
+export type SignoffStatus = 'PENDING' | 'RECEIVED' | 'DECLINED';
+
+export interface CustomerSignoff {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  title: string;
+  customerName: string;
+  status: SignoffStatus;
+  requestedById: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCustomerSignoffInput {
+  projectId: string;
+  title: string;
+  customerName: string;
+}
+
+export interface UpdateCustomerSignoffInput {
+  title?: string;
+  customerName?: string;
+  status?: SignoffStatus;
+  notes?: string;
+}
+
+export type DeploymentStatus = 'REQUESTED' | 'APPROVED' | 'BLOCKED';
+
+export interface DeploymentApproval {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  title: string;
+  status: DeploymentStatus;
+  requestedById: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDeploymentApprovalInput {
+  projectId: string;
+  title: string;
+  notes?: string;
+}
+
+export interface UpdateDeploymentApprovalInput {
+  title?: string;
+  status?: DeploymentStatus;
+  notes?: string;
+}
+
+export interface Notification {
+  id: string;
+  organizationId: string;
+  projectId: string | null;
+  recipientId: string;
+  title: string;
+  body: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface KnowledgeArticle {
+  id: string;
+  organizationId: string;
+  title: string;
+  category: string;
+  tags: string[];
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateKnowledgeArticleInput {
+  title: string;
+  category: string;
+  tags?: string[];
+  content: string;
+}
+
+export interface UpdateKnowledgeArticleInput {
+  title?: string;
+  category?: string;
+  tags?: string[];
+  content?: string;
+}
+
+export interface SearchResult {
+  type: string;
+  id: string;
+  title: string;
+  projectId: string | null;
+  snippet: string | null;
 }

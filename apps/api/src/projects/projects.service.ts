@@ -8,6 +8,7 @@ import { AuditLogService } from '../audit/audit-log.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { isValidTransition } from './project-status';
+import { isValidGovernanceTransition } from './governance-stage';
 
 @Injectable()
 export class ProjectsService {
@@ -61,6 +62,18 @@ export class ProjectsService {
       );
     }
 
+    if (
+      dto.governanceStage &&
+      !isValidGovernanceTransition(
+        existing.governanceStage,
+        dto.governanceStage,
+      )
+    ) {
+      throw new BadRequestException(
+        `Cannot move a project's governance stage from ${existing.governanceStage} to ${dto.governanceStage}.`,
+      );
+    }
+
     const project = await this.prisma.project.update({
       where: { id },
       data: dto,
@@ -73,6 +86,19 @@ export class ProjectsService {
         actorId,
         action: 'PROJECT_STATUS_CHANGED',
         metadata: { from: existing.status, to: dto.status },
+      });
+    }
+
+    if (
+      dto.governanceStage &&
+      dto.governanceStage !== existing.governanceStage
+    ) {
+      await this.auditLog.record({
+        organizationId,
+        projectId: project.id,
+        actorId,
+        action: 'GOVERNANCE_STAGE_ADVANCED',
+        metadata: { from: existing.governanceStage, to: dto.governanceStage },
       });
     }
 

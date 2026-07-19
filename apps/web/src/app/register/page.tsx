@@ -7,6 +7,7 @@ import { Alert, Button, Card, Form, Input, Typography } from 'antd';
 import { useAuth } from '@/lib/auth-context';
 import { ApiError } from '@/lib/api-client';
 import { spacing, containerWidth } from '@epg/design-tokens';
+import { glassPanelStrongStyle, gradientTextStyle } from '@/lib/ui-style';
 import type { RegisterInput } from '@/lib/types';
 
 const { Title, Paragraph } = Typography;
@@ -40,8 +41,12 @@ export default function RegisterPage() {
         padding: spacing[6],
       }}
     >
-      <Card style={{ width: '100%', maxWidth: containerWidth.sm }}>
-        <Title level={3}>Create your organization</Title>
+      <Card
+        style={{ width: '100%', maxWidth: containerWidth.sm, ...glassPanelStrongStyle }}
+      >
+        <Title level={3} style={gradientTextStyle}>
+          Create your organization
+        </Title>
         {error && (
           <Alert
             type="error"

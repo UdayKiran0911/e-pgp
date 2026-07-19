@@ -19,10 +19,10 @@
 
 ### Module 2: Notifications
 - [ ] Task 2.1: Build the notification system
-  - [ ] Subtask 2.1.1: In-app notifications
-    - [ ] Activity: `NotificationModule` with read/unread state
+  - [x] Subtask 2.1.1: In-app notifications
+    - [x] Activity: `NotificationModule` with read/unread state (`apps/api/src/notifications`) — system-generated only (no public create endpoint), recipient-scoped list/mark-read/mark-all-read; one real producer wired in so far (Deployment Governance decisions notify the requester, see Phase 6 Module 12); bell icon with unread-count `Badge` in the dashboard sidebar's Account row
   - [ ] Subtask 2.1.2: Delivery channels
-    - [ ] Activity: Email + in-app delivery abstraction
+    - [ ] Activity: Email + in-app delivery abstraction — not built; deliberately deferred, and every other governed mutation across the platform still only writes an `AuditLog` entry, not a `Notification` — wiring notifications into the rest of the mutation surface is a separate follow-up
 
 ### Module 3: Email Engine
 - [ ] Task 3.1: Build the transactional email engine

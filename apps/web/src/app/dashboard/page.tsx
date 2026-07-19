@@ -13,19 +13,12 @@ import {
   Space,
   Table,
   Tag,
-  Typography,
 } from 'antd';
 import { useAuth } from '@/lib/auth-context';
 import { api, ApiError } from '@/lib/api-client';
 import { spacing, semanticColor } from '@epg/design-tokens';
-import type {
-  CreateUserInput,
-  Organization,
-  PublicUser,
-  Role,
-} from '@/lib/types';
-
-const { Title } = Typography;
+import { glassPanelStyle } from '@/lib/ui-style';
+import type { CreateUserInput, PublicUser, Role } from '@/lib/types';
 
 const ROLE_COLOR: Record<Role, string> = {
   ADMIN: semanticColor.brand,
@@ -38,17 +31,13 @@ const ASSIGNABLE_ROLES: Role[] = ['ADMIN', 'GOVERNANCE_LEAD', 'MEMBER', 'AUDITOR
 
 /** Pure data fetch — no React state here, so it's safe to call from an effect. */
 async function fetchDashboardData(token: string) {
-  const [organization, users] = await Promise.all([
-    api.getMyOrganization(token),
-    api.listUsers(token),
-  ]);
-  return { organization, users };
+  const users = await api.listUsers(token);
+  return { users };
 }
 
 export default function DashboardPage() {
   const { user, token } = useAuth();
   const { message } = App.useApp();
-  const [organization, setOrganization] = useState<Organization | null>(null);
   const [users, setUsers] = useState<PublicUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,9 +50,8 @@ export default function DashboardPage() {
     if (!token) return;
     let cancelled = false;
     fetchDashboardData(token)
-      .then(({ organization: org, users: userList }) => {
+      .then(({ users: userList }) => {
         if (cancelled) return;
-        setOrganization(org);
         setUsers(userList);
         setError(null);
       })
@@ -83,8 +71,7 @@ export default function DashboardPage() {
   // called from event handlers only, never from an effect.
   const reload = useCallback(async () => {
     if (!token) return;
-    const { organization: org, users: userList } = await fetchDashboardData(token);
-    setOrganization(org);
+    const { users: userList } = await fetchDashboardData(token);
     setUsers(userList);
   }, [token]);
 
@@ -139,13 +126,8 @@ export default function DashboardPage() {
     <Space orientation="vertical" size={parseInt(spacing[6], 10)} style={{ width: '100%' }}>
       {error && <Alert type="error" title={error} showIcon />}
 
-      <Card>
-        <Title level={4} style={{ margin: 0 }}>
-          {organization?.name ?? 'Organization'}
-        </Title>
-      </Card>
-
       <Card
+        style={glassPanelStyle}
         title="Members"
         extra={
           isAdmin && (
