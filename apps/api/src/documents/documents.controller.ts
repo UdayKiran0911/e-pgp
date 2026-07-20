@@ -18,6 +18,7 @@ import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { UploadDocumentDto } from './dto/upload-document.dto';
+import { ReuploadDocumentDto } from './dto/reupload-document.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -79,6 +80,38 @@ export class DocumentsController {
     const { absolutePath, title } =
       await this.documentsService.getFileForDownload(id, user.organizationId);
     res.download(absolutePath, title);
+  }
+
+  @Post(':id/reupload')
+  @Roles(Role.ADMIN, Role.GOVERNANCE_LEAD)
+  @UseInterceptors(FileInterceptor('file'))
+  reuploadFile(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() dto: ReuploadDocumentDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('A file is required.');
+    }
+    return this.documentsService.reuploadFile(
+      id,
+      user.organizationId,
+      user.userId,
+      {
+        version: dto.version,
+        buffer: file.buffer,
+        originalFilename: file.originalname,
+      },
+    );
+  }
+
+  @Get(':id/versions')
+  findVersions(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+  ) {
+    return this.documentsService.findVersions(id, user.organizationId);
   }
 
   @Get(':id')

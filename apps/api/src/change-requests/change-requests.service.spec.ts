@@ -2,6 +2,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ChangeRequestsService } from './change-requests.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
+import { GovernanceNotifierService } from '../governance-notifier/governance-notifier.service';
 import { ChangeRequestStatus } from '../../generated/prisma/client';
 
 describe('ChangeRequestsService', () => {
@@ -16,6 +17,7 @@ describe('ChangeRequestsService', () => {
     };
   };
   let auditLog: { record: jest.Mock };
+  let governanceNotifier: { notifyDecision: jest.Mock };
 
   const orgId = 'org-1';
   const actorId = 'user-1';
@@ -43,9 +45,11 @@ describe('ChangeRequestsService', () => {
       },
     };
     auditLog = { record: jest.fn() };
+    governanceNotifier = { notifyDecision: jest.fn() };
     service = new ChangeRequestsService(
       prisma as unknown as PrismaService,
       auditLog as unknown as AuditLogService,
+      governanceNotifier as unknown as GovernanceNotifierService,
     );
   });
 
@@ -130,6 +134,27 @@ describe('ChangeRequestsService', () => {
       }),
     );
     expect(result.status).toBe(ChangeRequestStatus.APPROVED);
+    expect(governanceNotifier.notifyDecision).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: orgId,
+        projectId: changeRequest.projectId,
+        recipientUserId: changeRequest.requestedById,
+      }),
+    );
+  });
+
+  it('does not notify when the update leaves status unchanged', async () => {
+    prisma.changeRequest.findFirst.mockResolvedValue(changeRequest);
+    prisma.changeRequest.update.mockResolvedValue({
+      ...changeRequest,
+      description: 'Updated description',
+    });
+
+    await service.update(changeRequest.id, orgId, actorId, {
+      description: 'Updated description',
+    });
+
+    expect(governanceNotifier.notifyDecision).not.toHaveBeenCalled();
   });
 
   it('rejects updating a change request that is not in the caller organization', async () => {

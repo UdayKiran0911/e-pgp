@@ -173,6 +173,29 @@ describe('ProjectsService', () => {
     expect(auditLog.record).not.toHaveBeenCalled();
   });
 
+  it('replaces custom metadata and writes a PROJECT_METADATA_UPDATED audit log entry', async () => {
+    prisma.project.findFirst.mockResolvedValue(project);
+    prisma.project.update.mockResolvedValue({
+      ...project,
+      metadata: { costCenter: 'CC-42' },
+    });
+
+    const result = await service.update(project.id, orgId, actorId, {
+      metadata: { costCenter: 'CC-42' },
+    });
+
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: orgId,
+        projectId: project.id,
+        actorId,
+        action: 'PROJECT_METADATA_UPDATED',
+        metadata: { keys: ['costCenter'] },
+      }),
+    );
+    expect(result.metadata).toEqual({ costCenter: 'CC-42' });
+  });
+
   it('rejects updating a project that is not in the caller organization', async () => {
     prisma.project.findFirst.mockResolvedValue(null);
 

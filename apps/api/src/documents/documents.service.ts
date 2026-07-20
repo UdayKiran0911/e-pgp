@@ -15,6 +15,12 @@ interface UploadFileInput {
   originalFilename: string;
 }
 
+interface ReuploadFileInput {
+  version?: string;
+  buffer: Buffer;
+  originalFilename: string;
+}
+
 @Injectable()
 export class DocumentsService {
   constructor(
@@ -78,6 +84,20 @@ export class DocumentsService {
     dto: UpdateDocumentDto,
   ) {
     const existing = await this.findOneInOrganization(id, organizationId);
+    const contentChanged =
+      (dto.url && dto.url !== existing.url) ||
+      (dto.version && dto.version !== existing.version);
+
+    if (contentChanged) {
+      await this.prisma.documentVersion.create({
+        data: {
+          documentId: id,
+          version: existing.version,
+          url: existing.url,
+          storageKey: existing.storageKey,
+        },
+      });
+    }
 
     const document = await this.prisma.document.update({
       where: { id },
@@ -99,6 +119,66 @@ export class DocumentsService {
     }
 
     return document;
+  }
+
+  // Document Versioning (Phase 4 Module 6 / Phase 5 Module 7 completion):
+  // the document's *current* url/storageKey/version is snapshotted into
+  // DocumentVersion before being overwritten by the newly-uploaded file, so
+  // prior files stay downloadable via history. Same append-only-history-
+  // table shape as `update()` above, but for re-uploaded files rather than
+  // metadata-only edits.
+  async reuploadFile(
+    id: string,
+    organizationId: string,
+    actorId: string,
+    input: ReuploadFileInput,
+  ) {
+    const existing = await this.findOneInOrganization(id, organizationId);
+
+    await this.prisma.documentVersion.create({
+      data: {
+        documentId: id,
+        version: existing.version,
+        url: existing.url,
+        storageKey: existing.storageKey,
+      },
+    });
+
+    const storageKey = await this.storage.save(
+      input.buffer,
+      input.originalFilename,
+    );
+    const nextVersion = input.version ?? existing.version;
+
+    const document = await this.prisma.document.update({
+      where: { id },
+      data: {
+        url: `/documents/${id}/download`,
+        storageKey,
+        version: nextVersion,
+      },
+    });
+
+    await this.auditLog.record({
+      organizationId,
+      projectId: document.projectId,
+      actorId,
+      action: 'DOCUMENT_REUPLOADED',
+      metadata: {
+        title: document.title,
+        from: existing.version,
+        to: nextVersion,
+      },
+    });
+    return document;
+  }
+
+  async findVersions(id: string, organizationId: string) {
+    await this.findOneInOrganization(id, organizationId);
+    return this.prisma.documentVersion.findMany({
+      where: { documentId: id },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   // Uploads a real file to the local-disk StorageProvider and records it

@@ -178,6 +178,29 @@ describe('Projects (integration)', () => {
     expect(forbidden.status).toBe(403);
   });
 
+  it('replaces custom metadata and writes a PROJECT_METADATA_UPDATED audit log entry', async () => {
+    const created = await request(app.getHttpServer())
+      .post('/projects')
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .send({ name: 'Metadata Test Project' });
+    const projectId = (created.body as ProjectBody).id;
+
+    const updated = await request(app.getHttpServer())
+      .patch(`/projects/${projectId}`)
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .send({ metadata: { costCenter: 'CC-42', deliveryPartner: 'Anblicks' } });
+    expect(updated.status).toBe(200);
+    expect((updated.body as ProjectBody).metadata).toEqual({
+      costCenter: 'CC-42',
+      deliveryPartner: 'Anblicks',
+    });
+
+    const auditEntry = await prisma.auditLog.findFirst({
+      where: { action: 'PROJECT_METADATA_UPDATED', projectId },
+    });
+    expect(auditEntry).not.toBeNull();
+  });
+
   it('does not let an org B admin see or modify an org A project', async () => {
     const created = await request(app.getHttpServer())
       .post('/projects')

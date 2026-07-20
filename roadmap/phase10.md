@@ -30,11 +30,11 @@
     - [x] Activity: `docker-compose.yml` for web + api + postgres
 
 ### Module 4: Kubernetes
-- [ ] Task 4.1: Author Kubernetes manifests/Helm chart
+- [x] Task 4.1: Author Kubernetes manifests/Helm chart
   - [x] Subtask 4.1.1: Base manifests
     - [x] Activity: Deployment/Service/Ingress manifests for web and api — `k8s/base/` (Kustomize): namespace, configmap, `secret.example.yaml` template (real `secret.yaml` gitignored), api/web Deployments with `/health` probes, api/web Services, nginx Ingress; `k8s/README.md` documents what's built vs. deferred, including that `LocalDiskStorageService` uploads aren't shared across API replicas
-  - [ ] Subtask 4.1.2: Environment overlays
-    - [ ] Activity: Kustomize or Helm values per environment — not built; only the `base/` layer exists
+  - [x] Subtask 4.1.2: Environment overlays
+    - [x] Activity: Kustomize or Helm values per environment — `k8s/overlays/{dev,staging,prod}`, each layering on `k8s/base/` with a name prefix + dedicated namespace; `dev` also patches replica counts down to 1 and lowers resource requests, `staging`/`prod` set `NODE_ENV` per environment. Real per-environment image tags remain deliberately deferred (no registry/org decision made) — Helm as an alternative to Kustomize was not built
 
 ### Module 5: Infrastructure as Code
 - [ ] Task 5.1: Define infrastructure as code
@@ -45,8 +45,8 @@
 - [ ] Task 6.1: Add observability
   - [x] Subtask 6.1.1: Metrics
     - [x] Activity: Expose Prometheus metrics from the API — `MetricsModule` (`apps/api/src/metrics`), `prom-client` `Counter`/`Histogram` (`http_requests_total`, `http_request_duration_seconds`) plus default Node process metrics, recorded via a global `MetricsMiddleware`, exposed unauthenticated at `GET /metrics` (flagged in code to be network-restricted in production)
-  - [ ] Subtask 6.1.2: Dashboards/alerts
-    - [ ] Activity: Build Grafana dashboards and alert rules — not built; no Grafana/Prometheus server stood up yet, only the `/metrics` endpoint to scrape
+  - [x] Subtask 6.1.2: Dashboards/alerts
+    - [x] Activity: Build Grafana dashboards and alert rules — `k8s/monitoring/grafana-dashboard.json` (request rate/error ratio/latency percentiles/event loop lag/memory/CPU panels) and `prometheus-alert-rules.yaml` (high error rate, high p95 latency, target down, high event loop lag, high memory) as dashboard-/config-as-code; no live Grafana or Prometheus server is provisioned by this repo — that remains a separate infra decision, these are the config artifacts such a server would load
 
 ### Module 7: Logging
 - [x] Task 7.1: Add structured logging

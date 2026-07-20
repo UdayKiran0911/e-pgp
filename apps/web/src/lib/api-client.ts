@@ -1,5 +1,6 @@
 import type {
   AnalyticsOverview,
+  AuditChainVerification,
   AuditLogEntry,
   AuditSummary,
   AuthResponse,
@@ -14,6 +15,7 @@ import type {
   CreateDepartmentInput,
   CreateDeploymentApprovalInput,
   CreateDocumentInput,
+  CreateExternalReferenceInput,
   CreateGovernanceGateInput,
   CreateIssueInput,
   CreateKnowledgeArticleInput,
@@ -31,7 +33,9 @@ import type {
   Department,
   DeploymentApproval,
   Document,
+  DocumentVersion,
   EmailLog,
+  ExternalReference,
   GovernanceGate,
   Issue,
   KnowledgeArticle,
@@ -173,6 +177,9 @@ export const api = {
 
   listAuditLogs: (token: string) =>
     request<AuditLogEntry[]>('/audit-logs', {}, token),
+
+  verifyAuditChain: (token: string) =>
+    request<AuditChainVerification>('/audit-logs/verify', {}, token),
 
   listRisks: (token: string, projectId: string) =>
     request<Risk[]>(`/risks?projectId=${projectId}`, {}, token),
@@ -367,6 +374,35 @@ export const api = {
       { method: 'PATCH', body: JSON.stringify(data) },
       token,
     ),
+
+  listDocumentVersions: (token: string, id: string) =>
+    request<DocumentVersion[]>(`/documents/${id}/versions`, {}, token),
+
+  reuploadDocument: async (
+    token: string,
+    id: string,
+    data: { version?: string; file: File },
+  ): Promise<Document> => {
+    const form = new FormData();
+    if (data.version) form.append('version', data.version);
+    form.append('file', data.file);
+
+    const response = await fetch(`${API_URL}/documents/${id}/reupload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    });
+    if (!response.ok) {
+      const body: { message?: string | string[] } = await response
+        .json()
+        .catch(() => ({}));
+      const message = Array.isArray(body.message)
+        ? body.message.join(', ')
+        : (body.message ?? response.statusText);
+      throw new ApiError(response.status, message);
+    }
+    return (await response.json()) as Document;
+  },
 
   listGovernanceGates: (token: string, projectId: string) =>
     request<GovernanceGate[]>(
@@ -659,6 +695,30 @@ export const api = {
     request<EmailLog[]>(
       projectId ? `/email-logs?projectId=${projectId}` : '/email-logs',
       {},
+      token,
+    ),
+
+  listExternalReferences: (token: string, issueId: string) =>
+    request<ExternalReference[]>(
+      `/external-references?issueId=${issueId}`,
+      {},
+      token,
+    ),
+
+  createExternalReference: (
+    token: string,
+    data: CreateExternalReferenceInput,
+  ) =>
+    request<ExternalReference>(
+      '/external-references',
+      { method: 'POST', body: JSON.stringify(data) },
+      token,
+    ),
+
+  deleteExternalReference: (token: string, id: string) =>
+    request<void>(
+      `/external-references/${id}`,
+      { method: 'DELETE' },
       token,
     ),
 };

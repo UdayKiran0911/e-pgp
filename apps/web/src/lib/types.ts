@@ -66,6 +66,7 @@ export interface Project {
   name: string;
   status: ProjectStatus;
   governanceStage: GovernanceStage;
+  metadata: Record<string, string> | null;
   organizationId: string;
   createdAt: string;
   updatedAt: string;
@@ -79,6 +80,7 @@ export interface UpdateProjectInput {
   name?: string;
   status?: ProjectStatus;
   governanceStage?: GovernanceStage;
+  metadata?: Record<string, string>;
 }
 
 export interface AuditLogEntry {
@@ -90,6 +92,12 @@ export interface AuditLogEntry {
   action: string;
   metadata: Record<string, unknown> | null;
   createdAt: string;
+}
+
+export interface AuditChainVerification {
+  valid: boolean;
+  checked: number;
+  brokenAtId: string | null;
 }
 
 export type RiskSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
@@ -348,6 +356,15 @@ export interface UpdateDocumentInput {
   title?: string;
   url?: string;
   version?: string;
+}
+
+export interface DocumentVersion {
+  id: string;
+  documentId: string;
+  version: string;
+  url: string;
+  storageKey: string | null;
+  createdAt: string;
 }
 
 export type GateCategory = 'DEVELOPMENT' | 'TESTING';
@@ -639,4 +656,27 @@ export interface EmailLog {
   subject: string;
   body: string;
   createdAt: string;
+}
+
+export type ExternalReferenceProvider =
+  | 'JIRA'
+  | 'AZURE_DEVOPS'
+  | 'SHAREPOINT'
+  | 'SERVICENOW';
+
+export interface ExternalReference {
+  id: string;
+  organizationId: string;
+  issueId: string;
+  provider: ExternalReferenceProvider;
+  externalId: string;
+  url: string;
+  createdAt: string;
+}
+
+export interface CreateExternalReferenceInput {
+  issueId: string;
+  provider: ExternalReferenceProvider;
+  externalId: string;
+  url: string;
 }

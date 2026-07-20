@@ -7,6 +7,7 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 import {
   AuditLogBody,
   AuditSummaryBody,
+  AuditVerifyBody,
   AuthResponseBody,
   ProjectBody,
   PublicUserBody,
@@ -182,6 +183,52 @@ describe('Audit Logs (integration)', () => {
   it('rejects a MEMBER reading the audit summary', async () => {
     const response = await request(app.getHttpServer())
       .get('/audit-logs/summary')
+      .set('Authorization', `Bearer ${memberToken}`);
+
+    expect(response.status).toBe(403);
+  });
+
+  it('reports a valid hash chain for the organization', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/audit-logs/verify')
+      .set('Authorization', `Bearer ${orgAAdminToken}`);
+
+    expect(response.status).toBe(200);
+    const body = response.body as AuditVerifyBody;
+    expect(body.valid).toBe(true);
+    expect(body.checked).toBeGreaterThan(0);
+    expect(body.brokenAtId).toBeNull();
+  });
+
+  it('detects a tampered entry when a row is altered directly in the database', async () => {
+    const target = await prisma.auditLog.findFirst({
+      where: { organizationId: orgAId, action: 'PROJECT_CREATED' },
+    });
+    expect(target).not.toBeNull();
+    await prisma.auditLog.update({
+      where: { id: target!.id },
+      data: { action: 'PROJECT_CREATED_TAMPERED' },
+    });
+
+    const response = await request(app.getHttpServer())
+      .get('/audit-logs/verify')
+      .set('Authorization', `Bearer ${orgAAdminToken}`);
+
+    expect(response.status).toBe(200);
+    const body = response.body as AuditVerifyBody;
+    expect(body.valid).toBe(false);
+    expect(body.brokenAtId).not.toBeNull();
+
+    // Restore, since later tests in this suite expect an intact chain.
+    await prisma.auditLog.update({
+      where: { id: target!.id },
+      data: { action: 'PROJECT_CREATED' },
+    });
+  });
+
+  it('rejects a MEMBER verifying the audit chain', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/audit-logs/verify')
       .set('Authorization', `Bearer ${memberToken}`);
 
     expect(response.status).toBe(403);

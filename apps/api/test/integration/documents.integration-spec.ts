@@ -4,7 +4,12 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { AuthResponseBody, DocumentBody, ProjectBody } from './test-types';
+import {
+  AuthResponseBody,
+  DocumentBody,
+  DocumentVersionBody,
+  ProjectBody,
+} from './test-types';
 
 /**
  * Integration test: exercises Document CRUD (link-based, project-scoped),
@@ -205,6 +210,72 @@ describe('Documents (integration)', () => {
       .field('projectId', orgAProjectId)
       .field('title', 'Should fail')
       .attach('file', Buffer.from('x'), 'x.txt');
+    expect(response.status).toBe(403);
+  });
+
+  it('re-uploads a new version, snapshotting the prior one into version history', async () => {
+    const uploaded = await request(app.getHttpServer())
+      .post('/documents/upload')
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .field('projectId', orgAProjectId)
+      .field('title', 'Versioned Runbook')
+      .field('version', '1.0')
+      .attach('file', Buffer.from('v1 contents'), 'runbook-v1.pdf');
+    const documentId = (uploaded.body as DocumentBody).id;
+    const v1StorageKey = (uploaded.body as DocumentBody).storageKey;
+
+    const reuploaded = await request(app.getHttpServer())
+      .post(`/documents/${documentId}/reupload`)
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .field('version', '2.0')
+      .attach('file', Buffer.from('v2 contents'), 'runbook-v2.pdf');
+    expect(reuploaded.status).toBe(201);
+    const reuploadedBody = reuploaded.body as DocumentBody;
+    expect(reuploadedBody.version).toBe('2.0');
+    expect(reuploadedBody.storageKey).not.toBe(v1StorageKey);
+
+    const versions = await request(app.getHttpServer())
+      .get(`/documents/${documentId}/versions`)
+      .set('Authorization', `Bearer ${orgAAdminToken}`);
+    expect(versions.status).toBe(200);
+    const versionList = versions.body as DocumentVersionBody[];
+    expect(versionList).toHaveLength(1);
+    expect(versionList[0].version).toBe('1.0');
+    expect(versionList[0].storageKey).toBe(v1StorageKey);
+
+    const downloaded = await request(app.getHttpServer())
+      .get(`/documents/${documentId}/download`)
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .buffer(true)
+      .parse((res, callback) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        res.on('end', () => callback(null, Buffer.concat(chunks)));
+      });
+    expect(
+      Buffer.compare(downloaded.body as Buffer, Buffer.from('v2 contents')),
+    ).toBe(0);
+
+    const auditEntry = await prisma.auditLog.findFirst({
+      where: { action: 'DOCUMENT_REUPLOADED', projectId: orgAProjectId },
+      orderBy: { createdAt: 'desc' },
+    });
+    expect(auditEntry).not.toBeNull();
+  });
+
+  it('rejects a MEMBER re-uploading a document', async () => {
+    const uploaded = await request(app.getHttpServer())
+      .post('/documents/upload')
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .field('projectId', orgAProjectId)
+      .field('title', 'RBAC Reupload Test')
+      .attach('file', Buffer.from('v1'), 'x.pdf');
+    const documentId = (uploaded.body as DocumentBody).id;
+
+    const response = await request(app.getHttpServer())
+      .post(`/documents/${documentId}/reupload`)
+      .set('Authorization', `Bearer ${memberToken}`)
+      .attach('file', Buffer.from('v2'), 'x.pdf');
     expect(response.status).toBe(403);
   });
 });

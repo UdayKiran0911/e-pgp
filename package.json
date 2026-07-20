@@ -19,6 +19,7 @@
     "test:all": "turbo run lint typecheck test",
     "ui-audit": "node scripts/ui-audit.js",
     "contrast-audit": "node scripts/contrast-audit.js",
+    "generate:er-diagram": "node scripts/generate-er-diagram.js",
     "prepare": "husky"
   },
   "devDependencies": {

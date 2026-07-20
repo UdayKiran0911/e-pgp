@@ -14,6 +14,10 @@ describe('DocumentsService', () => {
       create: jest.Mock;
       update: jest.Mock;
     };
+    documentVersion: {
+      create: jest.Mock;
+      findMany: jest.Mock;
+    };
   };
   let auditLog: { record: jest.Mock };
   let storage: {
@@ -44,6 +48,10 @@ describe('DocumentsService', () => {
         findFirst: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
+      },
+      documentVersion: {
+        create: jest.fn(),
+        findMany: jest.fn(),
       },
     };
     auditLog = { record: jest.fn() };
@@ -106,7 +114,7 @@ describe('DocumentsService', () => {
     expect(result).toEqual(document);
   });
 
-  it('bumps the version and writes a DOCUMENT_UPDATED audit log entry', async () => {
+  it('bumps the version, snapshots the prior version, and writes a DOCUMENT_UPDATED audit log entry', async () => {
     prisma.document.findFirst.mockResolvedValue(document);
     prisma.document.update.mockResolvedValue({ ...document, version: '2.0' });
 
@@ -114,6 +122,14 @@ describe('DocumentsService', () => {
       version: '2.0',
     });
 
+    expect(prisma.documentVersion.create).toHaveBeenCalledWith({
+      data: {
+        documentId: document.id,
+        version: document.version,
+        url: document.url,
+        storageKey: undefined,
+      },
+    });
     expect(auditLog.record).toHaveBeenCalledWith(
       expect.objectContaining({
         organizationId: orgId,
@@ -124,6 +140,15 @@ describe('DocumentsService', () => {
       }),
     );
     expect(result.version).toBe('2.0');
+  });
+
+  it('does not snapshot a version when the update leaves url and version unchanged', async () => {
+    prisma.document.findFirst.mockResolvedValue(document);
+    prisma.document.update.mockResolvedValue({ ...document, title: 'Renamed' });
+
+    await service.update(document.id, orgId, actorId, { title: 'Renamed' });
+
+    expect(prisma.documentVersion.create).not.toHaveBeenCalled();
   });
 
   it('rejects updating a document that is not in the caller organization', async () => {
@@ -172,6 +197,96 @@ describe('DocumentsService', () => {
       expect(auditLog.record).toHaveBeenCalledWith(
         expect.objectContaining({ action: 'DOCUMENT_UPLOADED' }),
       );
+    });
+  });
+
+  describe('reuploadFile', () => {
+    it('rejects re-uploading a document that is not in the caller organization', async () => {
+      prisma.document.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.reuploadFile(document.id, orgId, actorId, {
+          buffer: Buffer.from('v2-bytes'),
+          originalFilename: 'threat-model-v2.pdf',
+        }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(storage.save).not.toHaveBeenCalled();
+    });
+
+    it('snapshots the prior version, saves the new file, and writes a DOCUMENT_REUPLOADED audit log entry', async () => {
+      const uploaded = {
+        ...document,
+        storageKey: 'old-key.pdf',
+      };
+      prisma.document.findFirst.mockResolvedValue(uploaded);
+      prisma.document.update.mockImplementation(
+        ({ data }: { data: Record<string, unknown> }) =>
+          Promise.resolve({ ...uploaded, ...data }),
+      );
+
+      const result = await service.reuploadFile(document.id, orgId, actorId, {
+        version: '2.0',
+        buffer: Buffer.from('v2-bytes'),
+        originalFilename: 'threat-model-v2.pdf',
+      });
+
+      expect(prisma.documentVersion.create).toHaveBeenCalledWith({
+        data: {
+          documentId: document.id,
+          version: uploaded.version,
+          url: uploaded.url,
+          storageKey: uploaded.storageKey,
+        },
+      });
+      expect(storage.save).toHaveBeenCalledWith(
+        Buffer.from('v2-bytes'),
+        'threat-model-v2.pdf',
+      );
+      expect(result.storageKey).toBe('generated-key.pdf');
+      expect(result.version).toBe('2.0');
+      expect(auditLog.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'DOCUMENT_REUPLOADED',
+          metadata: { title: uploaded.title, from: '1.0', to: '2.0' },
+        }),
+      );
+    });
+
+    it('keeps the existing version label when none is given on re-upload', async () => {
+      prisma.document.findFirst.mockResolvedValue(document);
+      prisma.document.update.mockImplementation(
+        ({ data }: { data: Record<string, unknown> }) =>
+          Promise.resolve({ ...document, ...data }),
+      );
+
+      const result = await service.reuploadFile(document.id, orgId, actorId, {
+        buffer: Buffer.from('v2-bytes'),
+        originalFilename: 'threat-model-v2.pdf',
+      });
+
+      expect(result.version).toBe(document.version);
+    });
+  });
+
+  describe('findVersions', () => {
+    it('rejects listing versions for a document outside the caller organization', async () => {
+      prisma.document.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.findVersions(document.id, orgId),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('lists prior versions newest first', async () => {
+      prisma.document.findFirst.mockResolvedValue(document);
+      prisma.documentVersion.findMany.mockResolvedValue([]);
+
+      await service.findVersions(document.id, orgId);
+
+      expect(prisma.documentVersion.findMany).toHaveBeenCalledWith({
+        where: { documentId: document.id },
+        orderBy: { createdAt: 'desc' },
+      });
     });
   });
 

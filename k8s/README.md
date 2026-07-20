@@ -1,10 +1,11 @@
 # Kubernetes manifests (Phase 10 Module 4)
 
-Base manifests only — `k8s/base/`, applied via Kustomize:
+Base manifests in `k8s/base/`, with dev/staging/prod overlays in
+`k8s/overlays/`, applied via Kustomize:
 
 ```bash
-kubectl apply -k k8s/base
-kubectl apply -f k8s/base/secret.yaml   # copy from secret.example.yaml first, fill in real values
+kubectl apply -k k8s/overlays/dev        # or staging, or prod
+kubectl apply -f k8s/base/secret.yaml    # copy from secret.example.yaml first, fill in real values
 ```
 
 ## What's here
@@ -16,13 +17,28 @@ kubectl apply -f k8s/base/secret.yaml   # copy from secret.example.yaml first, f
   `/health` readiness+liveness probes
 - `web-deployment.yaml` / `web-service.yaml` — the Next.js app, 2 replicas
 - `ingress.yaml` — nginx-ingress routing `/api` → API, `/` → web
+- `overlays/dev` — 1 replica of each app, lower resource requests,
+  `NODE_ENV=development`, `dev-` name prefix + `epg-platform-dev`
+  namespace
+- `overlays/staging` — mirrors the base (prod-shaped) replica counts on a
+  separate `staging-` prefixed namespace, so staging catches
+  multi-replica issues before prod does
+- `overlays/prod` — the base manifests already reflect prod-shaped
+  defaults; this overlay mainly gives prod its own namespace/prefix so
+  all three environments stay symmetrical
+
+Image tags are left as the base manifests' placeholders in every
+overlay — no `images:` transformer is wired in, since no real container
+registry/org has been decided (see "Deliberately not built" below).
 
 ## Deliberately not built
 
-- **Environment overlays** (Phase 10 Module 4 Subtask 4.1.2) — no
-  dev/staging/prod Kustomize overlays or Helm values yet; there's one
-  base config, replace the placeholder image references and `host`
-  manually per environment for now.
+- **Environment-specific image tags** — the overlays don't pin real
+  `ghcr.io/<org>/...` image references per environment; that needs a real
+  registry/org decision, same reasoning as the base manifests'
+  placeholders.
+- **Helm chart** — Kustomize overlays only, no Helm values-per-environment
+  alternative.
 - **Infrastructure as Code** (Phase 10 Module 5) — these manifests assume
   a cluster and container registry already exist. Provisioning them
   (Terraform/Pulumi) needs a real cloud-provider decision, not made here.

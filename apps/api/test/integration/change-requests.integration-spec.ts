@@ -86,6 +86,12 @@ describe('Change Requests (integration)', () => {
     await prisma.auditLog.deleteMany({
       where: { organizationId: { in: orgIds } },
     });
+    await prisma.notification.deleteMany({
+      where: { organizationId: { in: orgIds } },
+    });
+    await prisma.emailLog.deleteMany({
+      where: { organizationId: { in: orgIds } },
+    });
     await prisma.changeRequest.deleteMany({
       where: { organizationId: { in: orgIds } },
     });
@@ -138,6 +144,21 @@ describe('Change Requests (integration)', () => {
       orderBy: { createdAt: 'desc' },
     });
     expect(auditEntry).not.toBeNull();
+
+    // The decision fans out through GovernanceNotifierService — the member
+    // who submitted the change request should see an in-app notification
+    // and an EmailLog entry (see Phase 8 Module 2).
+    const notification = await prisma.notification.findFirst({
+      where: { projectId: orgAProjectId, title: { contains: 'APPROVED' } },
+      orderBy: { createdAt: 'desc' },
+    });
+    expect(notification).not.toBeNull();
+
+    const emailLog = await prisma.emailLog.findFirst({
+      where: { projectId: orgAProjectId, subject: { contains: 'APPROVED' } },
+      orderBy: { createdAt: 'desc' },
+    });
+    expect(emailLog).not.toBeNull();
   });
 
   it('rejects skipping straight from SUBMITTED to IMPLEMENTED', async () => {

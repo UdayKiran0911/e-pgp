@@ -1,0 +1,39 @@
+# Dev overlay (Phase 10 Module 4): single replica of each app, dev-tagged
+# images, a `dev-` name prefix and dedicated namespace so this can coexist
+# with staging/prod in the same cluster (or be applied to a shared dev
+# cluster without colliding). `kubectl apply -k k8s/overlays/dev`.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namePrefix: dev-
+namespace: epg-platform-dev
+resources:
+  - ../../base
+patches:
+  - target:
+      kind: Deployment
+      name: epg-api
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 50m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 128Mi
+  - target:
+      kind: Deployment
+      name: epg-web
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+configMapGenerator:
+  - name: epg-config
+    behavior: merge
+    literals:
+      - NODE_ENV=development
+# Image tags are left as the base manifests' placeholders — see
+# k8s/README.md for why an `images:` transformer isn't wired in here (no
+# real registry/org has been decided yet).

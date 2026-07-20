@@ -5,9 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
-import { NotificationsService } from '../notifications/notifications.service';
-import { WebhookConnectorsService } from '../webhook-connectors/webhook-connectors.service';
-import { EmailService } from '../email/email.service';
+import { GovernanceNotifierService } from '../governance-notifier/governance-notifier.service';
 import { CreateDeploymentApprovalDto } from './dto/create-deployment-approval.dto';
 import { UpdateDeploymentApprovalDto } from './dto/update-deployment-approval.dto';
 import { isValidDeploymentTransition } from './deployment-status';
@@ -18,9 +16,7 @@ export class DeploymentApprovalsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditLog: AuditLogService,
-    private readonly notifications: NotificationsService,
-    private readonly webhooks: WebhookConnectorsService,
-    private readonly email: EmailService,
+    private readonly governanceNotifier: GovernanceNotifierService,
   ) {}
 
   findAllInOrganization(organizationId: string, projectId?: string) {
@@ -105,41 +101,24 @@ export class DeploymentApprovalsService {
         action: 'DEPLOYMENT_APPROVAL_STATUS_CHANGED',
         metadata: { from: existing.status, to: dto.status },
       });
-      await this.notifications.notify({
+      await this.governanceNotifier.notifyDecision({
         organizationId,
-        recipientId: existing.requestedById,
         projectId: approval.projectId,
+        recipientUserId: existing.requestedById,
         title:
           dto.status === DeploymentStatus.APPROVED
             ? `Deployment "${approval.title}" approved`
             : `Deployment "${approval.title}" blocked`,
         body: dto.status === DeploymentStatus.BLOCKED ? dto.notes : undefined,
+        emailSubject:
+          dto.status === DeploymentStatus.APPROVED
+            ? `Deployment "${approval.title}" approved`
+            : `Deployment "${approval.title}" blocked`,
+        emailBody:
+          dto.status === DeploymentStatus.BLOCKED && dto.notes
+            ? dto.notes
+            : `Deployment "${approval.title}" is now ${dto.status}.`,
       });
-      await this.webhooks.notify(
-        organizationId,
-        dto.status === DeploymentStatus.APPROVED
-          ? `Deployment "${approval.title}" approved.`
-          : `Deployment "${approval.title}" blocked.`,
-      );
-      const requester = await this.prisma.user.findUnique({
-        where: { id: existing.requestedById },
-        select: { email: true },
-      });
-      if (requester) {
-        await this.email.send({
-          organizationId,
-          projectId: approval.projectId,
-          recipientEmail: requester.email,
-          subject:
-            dto.status === DeploymentStatus.APPROVED
-              ? `Deployment "${approval.title}" approved`
-              : `Deployment "${approval.title}" blocked`,
-          body:
-            dto.status === DeploymentStatus.BLOCKED && dto.notes
-              ? dto.notes
-              : `Deployment "${approval.title}" is now ${dto.status}.`,
-        });
-      }
     }
 
     return approval;

@@ -5,6 +5,7 @@ import { AuditLogService } from '../audit/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { WebhookConnectorsService } from '../webhook-connectors/webhook-connectors.service';
 import { EmailService } from '../email/email.service';
+import { GovernanceNotifierService } from '../governance-notifier/governance-notifier.service';
 import { DeploymentStatus } from '../../generated/prisma/client';
 
 interface NotifyCallArgs {
@@ -71,12 +72,16 @@ describe('DeploymentApprovalsService', () => {
     notifications = { notify: jest.fn<unknown, [NotifyCallArgs]>() };
     webhooks = { notify: jest.fn<unknown, [string, string]>() };
     email = { send: jest.fn() };
-    service = new DeploymentApprovalsService(
+    const governanceNotifier = new GovernanceNotifierService(
       prisma as unknown as PrismaService,
-      auditLog as unknown as AuditLogService,
       notifications as unknown as NotificationsService,
       webhooks as unknown as WebhookConnectorsService,
       email as unknown as EmailService,
+    );
+    service = new DeploymentApprovalsService(
+      prisma as unknown as PrismaService,
+      auditLog as unknown as AuditLogService,
+      governanceNotifier,
     );
   });
 

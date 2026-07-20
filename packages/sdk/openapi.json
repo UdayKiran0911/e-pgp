@@ -1,0 +1,2825 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/audit-logs": {
+      "get": {
+        "operationId": "AuditLogController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AuditLog"
+        ]
+      }
+    },
+    "/audit-logs/summary": {
+      "get": {
+        "operationId": "AuditLogController_summarize",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AuditLog"
+        ]
+      }
+    },
+    "/audit-logs/verify": {
+      "get": {
+        "operationId": "AuditLogController_verifyChain",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AuditLog"
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/organizations/me": {
+      "get": {
+        "operationId": "OrganizationsController_getMine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Organizations"
+        ]
+      },
+      "patch": {
+        "operationId": "OrganizationsController_updateMine",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrganizationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/organizations/me/export": {
+      "get": {
+        "operationId": "OrganizationsController_exportMine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Organizations"
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "operationId": "UsersController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "post": {
+        "operationId": "UsersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "operationId": "UsersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/projects": {
+      "get": {
+        "operationId": "ProjectsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Projects"
+        ]
+      },
+      "post": {
+        "operationId": "ProjectsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
+    "/projects/{id}": {
+      "get": {
+        "operationId": "ProjectsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Projects"
+        ]
+      },
+      "patch": {
+        "operationId": "ProjectsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProjectDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Projects"
+        ]
+      }
+    },
+    "/risks": {
+      "get": {
+        "operationId": "RisksController_findAll",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Risks"
+        ]
+      },
+      "post": {
+        "operationId": "RisksController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRiskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Risks"
+        ]
+      }
+    },
+    "/risks/{id}": {
+      "get": {
+        "operationId": "RisksController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Risks"
+        ]
+      },
+      "patch": {
+        "operationId": "RisksController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRiskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Risks"
+        ]
+      }
+    },
+    "/decisions": {
+      "get": {
+        "operationId": "DecisionsController_findAll",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Decisions"
+        ]
+      },
+      "post": {
+        "operationId": "DecisionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDecisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Decisions"
+        ]
+      }
+    },
+    "/decisions/{id}": {
+      "get": {
+        "operationId": "DecisionsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Decisions"
+        ]
+      },
+      "patch": {
+        "operationId": "DecisionsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDecisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Decisions"
+        ]
+      }
+    },
+    "/issues": {
+      "get": {
+        "operationId": "IssuesController_findAll",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Issues"
+        ]
+      },
+      "post": {
+        "operationId": "IssuesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIssueDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Issues"
+        ]
+      }
+    },
+    "/issues/{id}": {
+      "get": {
+        "operationId": "IssuesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Issues"
+        ]
+      },
+      "patch": {
+        "operationId": "IssuesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIssueDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Issues"
+        ]
+      }
+    },
+    "/change-requests": {
+      "get": {
+        "operationId": "ChangeRequestsController_findAll",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ChangeRequests"
+        ]
+      },
+      "post": {
+        "operationId": "ChangeRequestsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChangeRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ChangeRequests"
+        ]
+      }
+    },
+    "/change-requests/{id}": {
+      "get": {
+        "operationId": "ChangeRequestsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ChangeRequests"
+        ]
+      },
+      "patch": {
+        "operationId": "ChangeRequestsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChangeRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ChangeRequests"
+        ]
+      }
+    },
+    "/requirements": {
+      "get": {
+        "operationId": "RequirementsController_findAll",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Requirements"
+        ]
+      },
+      "post": {
+        "operationId": "RequirementsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRequirementDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Requirements"
+        ]
+      }
+    },
+    "/requirements/analysis": {
+      "get": {
+        "operationId": "RequirementsController_analyze",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Requirements"
+        ]
+      }
+    },
+    "/requirements/{id}": {
+      "get": {
+        "operationId": "RequirementsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Requirements"
+        ]
+      },
+      "patch": {
+        "operationId": "RequirementsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRequirementDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Requirements"
+        ]
+      }
+    },
+    "/reviews": {
+      "get": {
+        "operationId": "ReviewsController_findAll",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      },
+      "post": {
+        "operationId": "ReviewsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/reviews/{id}": {
+      "get": {
+        "operationId": "ReviewsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      },
+      "patch": {
+        "operationId": "ReviewsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/checklist-items": {
+      "get": {
+        "operationId": "ChecklistController_findAll",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Checklist"
+        ]
+      },
+      "post": {
+        "operationId": "ChecklistController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChecklistItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Checklist"
+        ]
+      }
+    },
+    "/checklist-items/{id}": {
+      "get": {
+        "operationId": "ChecklistController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Checklist"
+        ]
+      },
+      "patch": {
+        "operationId": "ChecklistController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChecklistItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Checklist"
+        ]
+      }
+    },
+    "/departments": {
+      "get": {
+        "operationId": "DepartmentsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Departments"
+        ]
+      },
+      "post": {
+        "operationId": "DepartmentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDepartmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Departments"
+        ]
+      }
+    },
+    "/departments/{id}": {
+      "get": {
+        "operationId": "DepartmentsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Departments"
+        ]
+      },
+      "patch": {
+        "operationId": "DepartmentsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDepartmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Departments"
+        ]
+      }
+    },
+    "/sops": {
+      "get": {
+        "operationId": "SopsController_findAll",
+        "parameters": [
+          {
+            "name": "category",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sops"
+        ]
+      },
+      "post": {
+        "operationId": "SopsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSopDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sops"
+        ]
+      }
+    },
+    "/sops/{id}": {
+      "get": {
+        "operationId": "SopsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sops"
+        ]
+      },
+      "patch": {
+        "operationId": "SopsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSopDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sops"
+        ]
+      }
+    },
+    "/documents": {
+      "get": {
+        "operationId": "DocumentsController_findAll",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Documents"
+        ]
+      },
+      "post": {
+        "operationId": "DocumentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
+    "/documents/upload": {
+      "post": {
+        "operationId": "DocumentsController_uploadFile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadDocumentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
+    "/documents/{id}/download": {
+      "get": {
+        "operationId": "DocumentsController_download",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
+    "/documents/{id}/reupload": {
+      "post": {
+        "operationId": "DocumentsController_reuploadFile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReuploadDocumentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
+    "/documents/{id}/versions": {
+      "get": {
+        "operationId": "DocumentsController_findVersions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
+    "/documents/{id}": {
+      "get": {
+        "operationId": "DocumentsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Documents"
+        ]
+      },
+      "patch": {
+        "operationId": "DocumentsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDocumentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
+    "/governance-gates": {
+      "get": {
+        "operationId": "GovernanceGatesController_findAll",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "GovernanceGates"
+        ]
+      },
+      "post": {
+        "operationId": "GovernanceGatesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGovernanceGateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "GovernanceGates"
+        ]
+      }
+    },
+    "/governance-gates/{id}": {
+      "get": {
+        "operationId": "GovernanceGatesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "GovernanceGates"
+        ]
+      },
+      "patch": {
+        "operationId": "GovernanceGatesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGovernanceGateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "GovernanceGates"
+        ]
+      }
+    },
+    "/customer-signoffs": {
+      "get": {
+        "operationId": "CustomerSignoffsController_findAll",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CustomerSignoffs"
+        ]
+      },
+      "post": {
+        "operationId": "CustomerSignoffsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerSignoffDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CustomerSignoffs"
+        ]
+      }
+    },
+    "/customer-signoffs/{id}": {
+      "get": {
+        "operationId": "CustomerSignoffsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CustomerSignoffs"
+        ]
+      },
+      "patch": {
+        "operationId": "CustomerSignoffsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomerSignoffDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CustomerSignoffs"
+        ]
+      }
+    },
+    "/deployment-approvals": {
+      "get": {
+        "operationId": "DeploymentApprovalsController_findAll",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DeploymentApprovals"
+        ]
+      },
+      "post": {
+        "operationId": "DeploymentApprovalsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDeploymentApprovalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DeploymentApprovals"
+        ]
+      }
+    },
+    "/deployment-approvals/{id}": {
+      "get": {
+        "operationId": "DeploymentApprovalsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DeploymentApprovals"
+        ]
+      },
+      "patch": {
+        "operationId": "DeploymentApprovalsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDeploymentApprovalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "DeploymentApprovals"
+        ]
+      }
+    },
+    "/notifications": {
+      "get": {
+        "operationId": "NotificationsController_findMine",
+        "parameters": [
+          {
+            "name": "unread",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/notifications/read-all": {
+      "patch": {
+        "operationId": "NotificationsController_markAllRead",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/notifications/{id}": {
+      "patch": {
+        "operationId": "NotificationsController_markRead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/webhook-connectors": {
+      "get": {
+        "operationId": "WebhookConnectorsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WebhookConnectors"
+        ]
+      },
+      "post": {
+        "operationId": "WebhookConnectorsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWebhookConnectorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WebhookConnectors"
+        ]
+      }
+    },
+    "/webhook-connectors/{id}": {
+      "patch": {
+        "operationId": "WebhookConnectorsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWebhookConnectorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "WebhookConnectors"
+        ]
+      }
+    },
+    "/email-logs": {
+      "get": {
+        "operationId": "EmailController_findAll",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Email"
+        ]
+      }
+    },
+    "/knowledge-articles": {
+      "get": {
+        "operationId": "KnowledgeArticlesController_findAll",
+        "parameters": [
+          {
+            "name": "category",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "KnowledgeArticles"
+        ]
+      },
+      "post": {
+        "operationId": "KnowledgeArticlesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateKnowledgeArticleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "KnowledgeArticles"
+        ]
+      }
+    },
+    "/knowledge-articles/{id}": {
+      "get": {
+        "operationId": "KnowledgeArticlesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "KnowledgeArticles"
+        ]
+      },
+      "patch": {
+        "operationId": "KnowledgeArticlesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateKnowledgeArticleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "KnowledgeArticles"
+        ]
+      }
+    },
+    "/search": {
+      "get": {
+        "operationId": "SearchController_search",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/plugins": {
+      "get": {
+        "operationId": "PluginsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Plugins"
+        ]
+      },
+      "post": {
+        "operationId": "PluginsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePluginManifestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Plugins"
+        ]
+      }
+    },
+    "/plugins/{id}": {
+      "patch": {
+        "operationId": "PluginsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePluginManifestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Plugins"
+        ]
+      }
+    },
+    "/security-findings": {
+      "get": {
+        "operationId": "SecurityFindingsController_findAll",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SecurityFindings"
+        ]
+      },
+      "post": {
+        "operationId": "SecurityFindingsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSecurityFindingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SecurityFindings"
+        ]
+      }
+    },
+    "/security-findings/{id}": {
+      "get": {
+        "operationId": "SecurityFindingsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SecurityFindings"
+        ]
+      },
+      "patch": {
+        "operationId": "SecurityFindingsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSecurityFindingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "SecurityFindings"
+        ]
+      }
+    },
+    "/projects/{projectId}/health-score": {
+      "get": {
+        "operationId": "ProjectHealthController_getScore",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ProjectHealth"
+        ]
+      }
+    },
+    "/analytics/overview": {
+      "get": {
+        "operationId": "AnalyticsController_getOverview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Analytics"
+        ]
+      }
+    },
+    "/checklist-templates": {
+      "get": {
+        "operationId": "ChecklistTemplatesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ChecklistTemplates"
+        ]
+      },
+      "post": {
+        "operationId": "ChecklistTemplatesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChecklistTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ChecklistTemplates"
+        ]
+      }
+    },
+    "/checklist-templates/{id}": {
+      "get": {
+        "operationId": "ChecklistTemplatesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ChecklistTemplates"
+        ]
+      },
+      "patch": {
+        "operationId": "ChecklistTemplatesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChecklistTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ChecklistTemplates"
+        ]
+      }
+    },
+    "/checklist-templates/{id}/apply": {
+      "post": {
+        "operationId": "ChecklistTemplatesController_apply",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyChecklistTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ChecklistTemplates"
+        ]
+      }
+    },
+    "/metrics": {
+      "get": {
+        "operationId": "MetricsController_getMetrics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Metrics"
+        ]
+      }
+    },
+    "/external-references": {
+      "get": {
+        "operationId": "ExternalReferencesController_findAllForIssue",
+        "parameters": [
+          {
+            "name": "issueId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ExternalReferences"
+        ]
+      },
+      "post": {
+        "operationId": "ExternalReferencesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExternalReferenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ExternalReferences"
+        ]
+      }
+    },
+    "/external-references/{id}": {
+      "delete": {
+        "operationId": "ExternalReferencesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "ExternalReferences"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "EPG Platform API",
+    "description": "Enterprise Project Governance Platform — REST API",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "RegisterDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateOrganizationDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateProjectDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateProjectDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateRiskDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateRiskDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateDecisionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateDecisionDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateIssueDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateIssueDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateChangeRequestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateChangeRequestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateRequirementDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateRequirementDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateReviewDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateReviewDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateChecklistItemDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateChecklistItemDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateDepartmentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateDepartmentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateSopDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateSopDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateDocumentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UploadDocumentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ReuploadDocumentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateDocumentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateGovernanceGateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateGovernanceGateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateCustomerSignoffDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateCustomerSignoffDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateDeploymentApprovalDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateDeploymentApprovalDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateWebhookConnectorDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateWebhookConnectorDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateKnowledgeArticleDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateKnowledgeArticleDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreatePluginManifestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdatePluginManifestDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateSecurityFindingDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateSecurityFindingDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateChecklistTemplateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateChecklistTemplateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ApplyChecklistTemplateDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateExternalReferenceDto": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  }
+}

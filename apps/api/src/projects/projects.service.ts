@@ -102,6 +102,16 @@ export class ProjectsService {
       });
     }
 
+    if (dto.metadata) {
+      await this.auditLog.record({
+        organizationId,
+        projectId: project.id,
+        actorId,
+        action: 'PROJECT_METADATA_UPDATED',
+        metadata: { keys: Object.keys(dto.metadata) },
+      });
+    }
+
     return project;
   }
 }

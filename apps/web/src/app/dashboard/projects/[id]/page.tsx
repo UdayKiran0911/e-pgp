@@ -19,7 +19,7 @@ import {
   Typography,
   Upload,
 } from 'antd';
-import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import { HistoryOutlined, LinkOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth-context';
 import { api, ApiError, API_URL } from '@/lib/api-client';
 import { spacing, semanticColor } from '@epg/design-tokens';
@@ -34,6 +34,7 @@ import type {
   CreateDecisionInput,
   CreateDeploymentApprovalInput,
   CreateDocumentInput,
+  CreateExternalReferenceInput,
   CreateGovernanceGateInput,
   CreateIssueInput,
   CreateRequirementInput,
@@ -45,6 +46,9 @@ import type {
   DeploymentApproval,
   DeploymentStatus,
   Document,
+  DocumentVersion,
+  ExternalReference,
+  ExternalReferenceProvider,
   GateCategory,
   GovernanceGate,
   Issue,
@@ -419,6 +423,19 @@ export default function ProjectDetailPage() {
   const [checklistTemplates, setChecklistTemplates] = useState<ChecklistTemplate[]>([]);
   const [applyTemplateOpen, setApplyTemplateOpen] = useState(false);
   const [applyingTemplate, setApplyingTemplate] = useState(false);
+  const [documentVersionsOpen, setDocumentVersionsOpen] = useState(false);
+  const [documentVersionsDoc, setDocumentVersionsDoc] = useState<Document | null>(null);
+  const [documentVersions, setDocumentVersions] = useState<DocumentVersion[]>([]);
+  const [loadingDocumentVersions, setLoadingDocumentVersions] = useState(false);
+  const [reuploadFile, setReuploadFile] = useState<File | null>(null);
+  const [reuploadingDocument, setReuploadingDocument] = useState(false);
+  const [externalRefsOpen, setExternalRefsOpen] = useState(false);
+  const [externalRefsIssue, setExternalRefsIssue] = useState<Issue | null>(null);
+  const [externalRefs, setExternalRefs] = useState<ExternalReference[]>([]);
+  const [loadingExternalRefs, setLoadingExternalRefs] = useState(false);
+  const [addingExternalRef, setAddingExternalRef] = useState(false);
+  const [metadataOpen, setMetadataOpen] = useState(false);
+  const [savingMetadata, setSavingMetadata] = useState(false);
 
   const canManage = user?.role === 'ADMIN' || user?.role === 'GOVERNANCE_LEAD';
   const activeCategory = REGISTER_CATEGORY[activeRegister];
@@ -944,6 +961,134 @@ export default function ProjectDetailPage() {
     }
   };
 
+  const openDocumentVersions = async (doc: Document) => {
+    if (!token) return;
+    setDocumentVersionsDoc(doc);
+    setDocumentVersionsOpen(true);
+    setLoadingDocumentVersions(true);
+    try {
+      setDocumentVersions(await api.listDocumentVersions(token, doc.id));
+    } catch (err) {
+      void message.error(
+        err instanceof ApiError
+          ? err.message
+          : 'Failed to load version history.',
+      );
+    } finally {
+      setLoadingDocumentVersions(false);
+    }
+  };
+
+  const handleReuploadDocument = async (values: { version?: string }) => {
+    if (!token || !documentVersionsDoc || !reuploadFile) {
+      void message.error('Choose a file first.');
+      return;
+    }
+    setReuploadingDocument(true);
+    try {
+      await api.reuploadDocument(token, documentVersionsDoc.id, {
+        version: values.version,
+        file: reuploadFile,
+      });
+      void message.success('New version uploaded.');
+      setReuploadFile(null);
+      await reload();
+      setDocumentVersions(
+        await api.listDocumentVersions(token, documentVersionsDoc.id),
+      );
+    } catch (err) {
+      void message.error(
+        err instanceof ApiError
+          ? err.message
+          : 'Failed to upload the new version.',
+      );
+    } finally {
+      setReuploadingDocument(false);
+    }
+  };
+
+  const openExternalRefs = async (issue: Issue) => {
+    if (!token) return;
+    setExternalRefsIssue(issue);
+    setExternalRefsOpen(true);
+    setLoadingExternalRefs(true);
+    try {
+      setExternalRefs(await api.listExternalReferences(token, issue.id));
+    } catch (err) {
+      void message.error(
+        err instanceof ApiError
+          ? err.message
+          : 'Failed to load external references.',
+      );
+    } finally {
+      setLoadingExternalRefs(false);
+    }
+  };
+
+  const handleAddExternalRef = async (
+    values: Omit<CreateExternalReferenceInput, 'issueId'>,
+  ) => {
+    if (!token || !externalRefsIssue) return;
+    setAddingExternalRef(true);
+    try {
+      await api.createExternalReference(token, {
+        issueId: externalRefsIssue.id,
+        ...values,
+      });
+      setExternalRefs(
+        await api.listExternalReferences(token, externalRefsIssue.id),
+      );
+    } catch (err) {
+      void message.error(
+        err instanceof ApiError ? err.message : 'Failed to link the reference.',
+      );
+    } finally {
+      setAddingExternalRef(false);
+    }
+  };
+
+  const handleRemoveExternalRef = async (id: string) => {
+    if (!token || !externalRefsIssue) return;
+    try {
+      await api.deleteExternalReference(token, id);
+      setExternalRefs(
+        await api.listExternalReferences(token, externalRefsIssue.id),
+      );
+    } catch (err) {
+      void message.error(
+        err instanceof ApiError
+          ? err.message
+          : 'Failed to remove the reference.',
+      );
+    }
+  };
+
+  const handleSaveMetadata = async (values: {
+    entries?: { key: string; value: string }[];
+  }) => {
+    if (!token) return;
+    setSavingMetadata(true);
+    try {
+      const metadata = Object.fromEntries(
+        (values.entries ?? [])
+          .filter((entry) => entry?.key)
+          .map((entry) => [entry.key, entry.value ?? '']),
+      );
+      await api.updateProject(token, projectId, { metadata });
+      void message.success('Custom fields updated.');
+      setMetadataOpen(false);
+      await reload();
+    } catch (err) {
+      void message.error(
+        err instanceof ApiError
+          ? err.message
+          : 'Failed to update custom fields.',
+      );
+    } finally {
+      setSavingMetadata(false);
+    }
+  };
+
   const handleAddClick = () => {
     if (activeRegister === 'risks') setCreateRiskOpen(true);
     else if (activeRegister === 'decisions') setLogDecisionOpen(true);
@@ -1079,6 +1224,19 @@ export default function ProjectDetailPage() {
                 ) : (
                   <Tag color={ISSUE_STATUS_COLOR[status]}>{status}</Tag>
                 ),
+            },
+            {
+              title: 'External Refs',
+              key: 'externalRefs',
+              render: (_, record) => (
+                <Button
+                  size="small"
+                  icon={<LinkOutlined />}
+                  onClick={() => void openExternalRefs(record)}
+                >
+                  Links
+                </Button>
+              ),
             },
           ]}
         />
@@ -1404,6 +1562,19 @@ export default function ProjectDetailPage() {
               },
             },
             { title: 'Version', dataIndex: 'version' },
+            {
+              title: 'History',
+              key: 'history',
+              render: (_, record) => (
+                <Button
+                  size="small"
+                  icon={<HistoryOutlined />}
+                  onClick={() => void openDocumentVersions(record)}
+                >
+                  Versions
+                </Button>
+              ),
+            },
           ]}
         />
       ),
@@ -1466,6 +1637,16 @@ export default function ProjectDetailPage() {
                 </Tag>
               )}
             </Space>
+          )
+        }
+        extra={
+          project && (
+            <Button size="small" onClick={() => setMetadataOpen(true)}>
+              Custom Fields
+              {project.metadata && Object.keys(project.metadata).length > 0
+                ? ` (${Object.keys(project.metadata).length})`
+                : ''}
+            </Button>
           )
         }
       >
@@ -1942,6 +2123,242 @@ export default function ProjectDetailPage() {
           <Button type="primary" htmlType="submit" loading={applyingTemplate} block>
             Apply Template
           </Button>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={
+          documentVersionsDoc
+            ? `Version history — ${documentVersionsDoc.title}`
+            : 'Version history'
+        }
+        open={documentVersionsOpen}
+        onCancel={() => {
+          setDocumentVersionsOpen(false);
+          setReuploadFile(null);
+        }}
+        footer={null}
+        destroyOnHidden
+      >
+        <Table<DocumentVersion>
+          rowKey="id"
+          size="small"
+          loading={loadingDocumentVersions}
+          dataSource={documentVersions}
+          pagination={false}
+          locale={{ emptyText: 'No prior versions yet.' }}
+          columns={[
+            { title: 'Version', dataIndex: 'version' },
+            {
+              title: 'Saved',
+              dataIndex: 'createdAt',
+              render: (createdAt: string) =>
+                new Date(createdAt).toLocaleString(),
+            },
+            {
+              title: '',
+              key: 'link',
+              render: (_, record) =>
+                record.storageKey ? (
+                  <a
+                    href={`${API_URL}/documents/${documentVersionsDoc?.id}/download`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    download
+                  </a>
+                ) : (
+                  <a href={record.url} target="_blank" rel="noreferrer">
+                    link
+                  </a>
+                ),
+            },
+          ]}
+        />
+        {canManage && documentVersionsDoc?.storageKey && (
+          <Form<{ version?: string }>
+            layout="vertical"
+            style={{ marginTop: spacing[4] }}
+            onFinish={(values) => void handleReuploadDocument(values)}
+          >
+            <Form.Item name="version" label="New version label">
+              <Input placeholder="e.g. 2.0" />
+            </Form.Item>
+            <Form.Item label="File" required>
+              <Upload
+                maxCount={1}
+                beforeUpload={(file) => {
+                  setReuploadFile(file);
+                  return false;
+                }}
+                onRemove={() => setReuploadFile(null)}
+              >
+                <Button icon={<UploadOutlined />}>Choose file</Button>
+              </Upload>
+            </Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={reuploadingDocument}
+              block
+            >
+              Upload new version
+            </Button>
+          </Form>
+        )}
+      </Modal>
+
+      <Modal
+        title={
+          externalRefsIssue
+            ? `External references — ${externalRefsIssue.title}`
+            : 'External references'
+        }
+        open={externalRefsOpen}
+        onCancel={() => setExternalRefsOpen(false)}
+        footer={null}
+        destroyOnHidden
+      >
+        <Table<ExternalReference>
+          rowKey="id"
+          size="small"
+          loading={loadingExternalRefs}
+          dataSource={externalRefs}
+          pagination={false}
+          locale={{ emptyText: 'No linked references yet.' }}
+          columns={[
+            {
+              title: 'Provider',
+              dataIndex: 'provider',
+              render: (provider: ExternalReferenceProvider) => (
+                <Tag color={semanticColor.brand}>{provider}</Tag>
+              ),
+            },
+            {
+              title: 'External ID',
+              dataIndex: 'externalId',
+              render: (externalId: string, record) => (
+                <a href={record.url} target="_blank" rel="noreferrer">
+                  {externalId}
+                </a>
+              ),
+            },
+            ...(canManage
+              ? [
+                  {
+                    title: '',
+                    key: 'remove',
+                    render: (_: unknown, record: ExternalReference) => (
+                      <Button
+                        size="small"
+                        danger
+                        onClick={() => void handleRemoveExternalRef(record.id)}
+                      >
+                        Remove
+                      </Button>
+                    ),
+                  },
+                ]
+              : []),
+          ]}
+        />
+        {canManage && (
+          <Form<Omit<CreateExternalReferenceInput, 'issueId'>>
+            layout="vertical"
+            style={{ marginTop: spacing[4] }}
+            onFinish={(values) => void handleAddExternalRef(values)}
+          >
+            <Form.Item
+              name="provider"
+              label="Provider"
+              rules={[{ required: true }]}
+            >
+              <Select
+                options={[
+                  { value: 'JIRA', label: 'Jira' },
+                  { value: 'AZURE_DEVOPS', label: 'Azure DevOps' },
+                  { value: 'SHAREPOINT', label: 'SharePoint' },
+                  { value: 'SERVICENOW', label: 'ServiceNow' },
+                ]}
+              />
+            </Form.Item>
+            <Form.Item
+              name="externalId"
+              label="External ID"
+              rules={[{ required: true }]}
+            >
+              <Input placeholder="e.g. EPG-42" />
+            </Form.Item>
+            <Form.Item name="url" label="URL" rules={[{ required: true }]}>
+              <Input placeholder="https://..." />
+            </Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={addingExternalRef}
+              block
+            >
+              Link reference
+            </Button>
+          </Form>
+        )}
+      </Modal>
+
+      <Modal
+        title="Custom Fields"
+        open={metadataOpen}
+        onCancel={() => setMetadataOpen(false)}
+        footer={null}
+        destroyOnHidden
+      >
+        <Form<{ entries?: { key: string; value: string }[] }>
+          layout="vertical"
+          initialValues={{
+            entries: Object.entries(project?.metadata ?? {}).map(
+              ([key, value]) => ({ key, value }),
+            ),
+          }}
+          onFinish={(values) => void handleSaveMetadata(values)}
+        >
+          <Form.List name="entries">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map((field) => (
+                  <Space key={field.key} align="baseline" style={{ display: 'flex' }}>
+                    <Form.Item
+                      name={[field.name, 'key']}
+                      rules={[{ required: true, message: 'Key required' }]}
+                    >
+                      <Input placeholder="Key (e.g. costCenter)" disabled={!canManage} />
+                    </Form.Item>
+                    <Form.Item name={[field.name, 'value']}>
+                      <Input placeholder="Value" disabled={!canManage} />
+                    </Form.Item>
+                    {canManage && (
+                      <Button danger onClick={() => remove(field.name)}>
+                        Remove
+                      </Button>
+                    )}
+                  </Space>
+                ))}
+                {canManage && (
+                  <Button
+                    type="dashed"
+                    onClick={() => add()}
+                    block
+                    style={{ marginBottom: spacing[3] }}
+                  >
+                    Add field
+                  </Button>
+                )}
+              </>
+            )}
+          </Form.List>
+          {canManage && (
+            <Button type="primary" htmlType="submit" loading={savingMetadata} block>
+              Save
+            </Button>
+          )}
         </Form>
       </Modal>
     </Space>

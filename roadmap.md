@@ -189,3 +189,50 @@ verified against the live API and Neon database. Full lint/typecheck/unit
 verification for this batch happens before the push that closes it out,
 consistent with the practice of pre-checking locally even though the
 standing cadence rule only mandates the pre-push hook itself.
+
+A seventh batch closed out Document Management and Checklist Engine's last
+open items and picked up ten more modules spanning Phases 4, 8, 9, and 10.
+Document Versioning (Phase 4 Module 6 / Phase 5 Module 7) landed as an
+append-only `DocumentVersion` history table — re-uploading a file
+snapshots the prior version before overwriting, with a version-history
+modal and re-upload flow on the Documents tab. Project custom fields
+(Phase 4 Module 7) shipped as a `metadata Json?` column on `Project` (an
+opaque key/value map, no per-key schema) with a "Custom Fields" editor on
+the project detail page. Phase 4 Module 2 (ER Diagrams) is done via a new
+`scripts/generate-er-diagram.js`, regex-parsing `schema.prisma` into a
+Mermaid diagram at `docs/ER_DIAGRAM.md` — a snapshot, not continuously
+synced, same limitation as every other generated-artifact script in this
+repo. Audit Log tamper-evidence (Phase 9 Module 6) added a per-organization
+SHA-256 hash chain to `AuditLog` (`hash`/`previousHash`, with a one-off
+backfill script for the ~120 pre-existing rows using the exact same hash
+formula the service uses going forward) and a `GET /audit-logs/verify`
+endpoint with a "Verify Integrity" button on the Audit Log page —
+detects tampering, doesn't prevent it against someone with direct DB
+access, a documented and deliberate scope limit. Vulnerability Management
+(Phase 9 Module 9) picked up real, non-blocking CI scanning: `pnpm audit`
+in the lint job and Trivy container scans in the docker-build job, both
+`continue-on-error`/`exit-code: 0` for now since the existing dependency
+tree has untriaged findings — visibility first, a hard gate is a follow-up.
+The SDK (Phase 8 Module 9) is real this time: `packages/sdk` generates
+fully-typed `paths` via `openapi-typescript` from a spec snapshot
+(`apps/api export:openapi`) and wraps them in a thin `openapi-fetch`
+client — every route, method, request, and response is typed with zero
+hand-written per-endpoint methods; publishing to a registry remains
+deferred. Jira/Azure DevOps/SharePoint/ServiceNow (Phase 8 Modules 5-8)
+landed as one shared `ExternalReference` model (a `provider` discriminator,
+same trick as `Review`/`GovernanceGate`) — a link, not a sync, attached to
+Issue Register entries via a "Links" button and modal. Notification
+delivery channels (Phase 8 Module 2) got a real second consumer: the
+3-channel fan-out first built inline for Deployment Governance was
+extracted into `GovernanceNotifierService` and wired into Change Request
+decisions too. Phase 10 rounded out with Kubernetes environment overlays
+(`k8s/overlays/{dev,staging,prod}`, replica/resource patches, still no
+real per-environment image tags) and Grafana/Prometheus config-as-code
+(`k8s/monitoring/`, dashboard JSON + alert rules YAML, no live server
+provisioned). Every new endpoint was smoke-tested against the live API and
+Neon database end-to-end (document reupload/version history, external
+reference linking, audit chain verification staying valid across new
+writes, change-request approval fanning out to both a notification and an
+email log) after working around an unrelated OneDrive sync-conflict issue
+that had corrupted a few local file placeholders — not a code defect, just
+an environment hazard of developing inside a synced folder.

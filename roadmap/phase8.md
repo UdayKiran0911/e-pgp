@@ -18,11 +18,11 @@
     - [x] Activity: `AuthProvider` context (token persisted in localStorage — move to httpOnly cookie in Phase 9 hardening) + `RequireAuth` route guard
 
 ### Module 2: Notifications
-- [ ] Task 2.1: Build the notification system
+- [x] Task 2.1: Build the notification system
   - [x] Subtask 2.1.1: In-app notifications
-    - [x] Activity: `NotificationModule` with read/unread state (`apps/api/src/notifications`) — system-generated only (no public create endpoint), recipient-scoped list/mark-read/mark-all-read; one real producer wired in so far (Deployment Governance decisions notify the requester, see Phase 6 Module 12); bell icon with unread-count `Badge` in the dashboard sidebar's Account row
-  - [ ] Subtask 2.1.2: Delivery channels
-    - [ ] Activity: Email + in-app delivery abstraction — not built; deliberately deferred, and every other governed mutation across the platform still only writes an `AuditLog` entry, not a `Notification` — wiring notifications into the rest of the mutation surface is a separate follow-up
+    - [x] Activity: `NotificationModule` with read/unread state (`apps/api/src/notifications`) — system-generated only (no public create endpoint), recipient-scoped list/mark-read/mark-all-read; bell icon with unread-count `Badge` in the dashboard sidebar's Account row
+  - [x] Subtask 2.1.2: Delivery channels
+    - [x] Activity: Email + in-app delivery abstraction — `GovernanceNotifierService` (`apps/api/src/governance-notifier`), extracted from the inline 3-channel (notification/webhook/email) fan-out first built for Deployment Governance decisions (Phase 6 Module 12); now also wired into Change Request decisions (Phase 6 Module 7). Every other governed mutation across the platform still only writes an `AuditLog` entry — wiring the shared notifier into the rest of the mutation surface (Reviews, Governance Gates, Customer Sign-off) is a separate follow-up, but the reusable piece now exists
 
 ### Module 3: Email Engine
 - [ ] Task 3.1: Build the transactional email engine
@@ -40,28 +40,28 @@
 ### Module 5: Jira Integration
 - [ ] Task 5.1: Build Jira sync connector
   - [ ] Subtask 5.1.1: Two-way issue sync
-    - [ ] Activity: Prototype Jira issue <-> Issue Register sync
+    - [x] Activity: Prototype Jira issue <-> Issue Register sync — link-based, not sync: `ExternalReferenceModule` (`apps/api/src/external-references`, shared with Modules 6/7/8 via a `provider` discriminator, same trick as `Review`/`GovernanceGate`), the org pastes a Jira issue key + URL against an Issue Register entry. A real two-way sync needs Jira OAuth/PAT credentials and webhook handling, deliberately not built here
 
 ### Module 6: Azure DevOps Integration
 - [ ] Task 6.1: Build Azure DevOps connector
   - [ ] Subtask 6.1.1: Work item + pipeline status sync
-    - [ ] Activity: Prototype ADO work item sync
+    - [x] Activity: Prototype ADO work item sync — same link-based `ExternalReference` (`provider: AZURE_DEVOPS`) as Module 5; no real work-item/pipeline sync
 
 ### Module 7: SharePoint Integration
 - [ ] Task 7.1: Build SharePoint document connector
   - [ ] Subtask 7.1.1: Document library sync
-    - [ ] Activity: Prototype SharePoint document import into Document Management
+    - [x] Activity: Prototype SharePoint document import into Document Management — same link-based `ExternalReference` (`provider: SHAREPOINT`); attached to Issues like the others rather than a Document Management library-sync, since the shared model is issue-scoped — a document-library-specific import remains unbuilt
 
 ### Module 8: ServiceNow Integration
 - [ ] Task 8.1: Build ServiceNow connector
   - [ ] Subtask 8.1.1: Change/incident sync
-    - [ ] Activity: Prototype ServiceNow change request sync
+    - [x] Activity: Prototype ServiceNow change request sync — same link-based `ExternalReference` (`provider: SERVICENOW`); no real incident/change sync
 
 ### Module 9: SDK
-- [ ] Task 9.1: Publish a platform SDK
+- [x] Task 9.1: Publish a platform SDK
   - [x] Subtask 9.1.1: Generate a typed client from the OpenAPI spec
     - [x] Activity: Publish the OpenAPI spec itself — `@nestjs/swagger` wired in `apps/api/src/main.ts`, `GET /api-docs` (Swagger UI) and `GET /api-docs-json` (raw spec), also closing Phase 4's "OpenAPI Specification" deliverable
-    - [ ] Activity: Publish `@epg/sdk` generated from the spec — not built; deliberately deferred, needs a codegen pipeline decision (tool, publish target, versioning) beyond just having the spec
+    - [x] Activity: Publish `@epg/sdk` generated from the spec — `packages/sdk`, `openapi-typescript` generates fully-typed `paths` from a snapshot of the spec (`apps/api export:openapi` → `openapi.json`), a thin `createEpgClient()` wrapper (`openapi-fetch`) gives every route/method/request/response real types with zero hand-written per-endpoint methods; publishing to a package registry remains deliberately deferred — consumed as a workspace dependency for now
 
 ### Module 10: Plugin Framework
 - [x] Task 10.1: Build an extension/plugin framework

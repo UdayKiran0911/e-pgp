@@ -15,10 +15,10 @@
     - [ ] Activity: Model Document Management, SOP Library, Checklist Engine (Phase 5)
 
 ### Module 2: Entity Relationship Model
-- [ ] Task 2.1: Produce ER diagrams from the schema
-  - [ ] Subtask 2.1.1: Generate/maintain ER diagrams
-    - [ ] Activity: Export an ER diagram from `prisma/schema.prisma`
-    - [ ] Activity: Keep diagram in sync each time the schema changes
+- [x] Task 2.1: Produce ER diagrams from the schema
+  - [x] Subtask 2.1.1: Generate/maintain ER diagrams
+    - [x] Activity: Export an ER diagram from `prisma/schema.prisma` — `scripts/generate-er-diagram.js` (`pnpm generate:er-diagram`), regex-parses the schema (same no-build-step approach as `scripts/ui-audit.js`/`scripts/contrast-audit.js`) into a Mermaid `erDiagram`, written to `docs/ER_DIAGRAM.md`
+    - [x] Activity: Keep diagram in sync each time the schema changes — not automated/enforced in CI; a documented manual re-run step (same honest limitation as the SDK's `openapi.json` snapshot, Phase 8 Module 9)
 
 ### Module 3: API Design
 - [x] Task 3.1: Design the REST API surface
@@ -42,17 +42,17 @@
     - [x] Activity: Project create + status-change (`PROJECT_CREATED`, `PROJECT_STATUS_CHANGED`), User role change + activate/deactivate (`USER_ROLE_CHANGED`, `USER_DEACTIVATED`, `USER_REACTIVATED`), and Organization rename (`ORGANIZATION_UPDATED`) all write audit entries — verified end-to-end against a real database in integration tests
 
 ### Module 6: Versioning
-- [ ] Task 6.1: Design entity-level versioning for governed documents
-  - [ ] Subtask 6.1.1: Decide versioning strategy (append-only history table vs. row versioning)
-    - [ ] Activity: Prototype versioning for the Document Management module
+- [x] Task 6.1: Design entity-level versioning for governed documents
+  - [x] Subtask 6.1.1: Decide versioning strategy (append-only history table vs. row versioning)
+    - [x] Activity: Prototype versioning for the Document Management module — chose append-only history table (`DocumentVersion`, `apps/api/src/documents`): the `Document` row always holds current state, the prior url/storageKey/version is snapshotted into `DocumentVersion` before every content-changing update or re-upload — same shape as `AuditLog`'s relationship to the entities it logs
 
 ### Module 7: Metadata Design
-- [ ] Task 7.1: Design flexible metadata storage
-  - [ ] Subtask 7.1.1: Decide on JSON columns vs. EAV pattern for custom fields
-    - [ ] Activity: Add a `metadata Json?` convention for extensible entities
+- [x] Task 7.1: Design flexible metadata storage
+  - [x] Subtask 7.1.1: Decide on JSON columns vs. EAV pattern for custom fields
+    - [x] Activity: Add a `metadata Json?` convention for extensible entities — landed on `Project` first (`apps/api/src/projects`), a `Record<string, string>` the org defines freely, no per-key validation; a "Custom Fields" editor on the project detail page. Not yet extended to other entities — proving useful on one register before generalizing.
 
 ## Deliverables Checklist
-- [ ] ER Diagrams
+- [x] ER Diagrams — `docs/ER_DIAGRAM.md`, generated (see Module 2); a snapshot, not continuously synced
 - [ ] Database Dictionary
 - [x] OpenAPI Specification — live-generated, not a static document: `GET /api-docs-json` off the running API (see Module 3)
 - [ ] API Documentation

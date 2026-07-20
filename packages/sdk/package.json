@@ -1,0 +1,24 @@
+{
+  "name": "@epg/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Typed TypeScript client for the EPG Platform API, generated from the live OpenAPI spec.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "openapi-typescript openapi.json -o src/schema.d.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"no-op: generated-types package, nothing hand-written to lint besides client.ts\""
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.13.4"
+  },
+  "devDependencies": {
+    "@epg/tsconfig": "workspace:*",
+    "openapi-typescript": "^7.5.2",
+    "typescript": "^5.7.2"
+  }
+}

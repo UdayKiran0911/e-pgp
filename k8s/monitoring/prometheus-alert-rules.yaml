@@ -1,0 +1,74 @@
+# Monitoring (Phase 10 Module 6 — Dashboards/alerts): alert rules over the
+# metrics exposed at GET /metrics (apps/api/src/metrics). Written in plain
+# Prometheus rule-file format (`groups:` / `rules:`) — loadable via
+# Prometheus's own `rule_files:` config or adapted into a
+# `PrometheusRule` CRD if the cluster runs kube-prometheus-stack, without
+# changing the expressions. No live Prometheus/Alertmanager server is
+# provisioned by this repo — that's a separate infra decision, deliberately
+# not made here; this file is the config such a server would load.
+groups:
+  - name: epg-api.rules
+    rules:
+      - alert: EpgApiHighErrorRate
+        expr: >-
+          sum(rate(http_requests_total{status_code=~"5.."}[5m]))
+          /
+          sum(rate(http_requests_total[5m]))
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "EPG API 5xx error rate above 5%"
+          description: >-
+            More than 5% of requests to the EPG API have returned a 5xx
+            status over the last 5 minutes.
+
+      - alert: EpgApiHighLatency
+        expr: >-
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "EPG API p95 latency above 1s"
+          description: >-
+            95th percentile HTTP request duration has exceeded 1 second
+            for 5 minutes.
+
+      - alert: EpgApiDown
+        expr: up{job="epg-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "EPG API target is down"
+          description: >-
+            Prometheus has not been able to scrape the EPG API's /metrics
+            endpoint for 2 minutes.
+
+      - alert: EpgApiEventLoopLagHigh
+        expr: nodejs_eventloop_lag_seconds > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "EPG API Node.js event loop lag is high"
+          description: >-
+            The event loop is lagging by more than 500ms, a sign the
+            process is CPU-starved or blocked by synchronous work.
+
+      - alert: EpgApiHighMemoryUsage
+        expr: >-
+          process_resident_memory_bytes{job="epg-api"} > 450 * 1024 * 1024
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "EPG API pod memory usage is close to its limit"
+          description: >-
+            Resident memory has stayed above 450MiB for 10 minutes,
+            approaching the 512Mi container limit set in
+            k8s/base/api-deployment.yaml.

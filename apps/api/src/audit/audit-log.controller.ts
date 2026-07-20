@@ -25,4 +25,9 @@ export class AuditLogController {
   ) {
     return this.auditLog.summarize(user.organizationId, projectId);
   }
+
+  @Get('verify')
+  verifyChain(@CurrentUser() user: AuthenticatedUser) {
+    return this.auditLog.verifyChain(user.organizationId);
+  }
 }

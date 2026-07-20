@@ -37,8 +37,8 @@
 - [x] Task 6.1: Foundational append-only audit logging
   - [x] Subtask 6.1.1: `AuditLog` Prisma model
     - [x] Activity: Add append-only `AuditLog` model with actor/action/metadata
-  - [ ] Subtask 6.1.2: Tamper-evidence
-    - [ ] Activity: Add hash-chaining or write-once storage for audit log integrity
+  - [x] Subtask 6.1.2: Tamper-evidence
+    - [x] Activity: Add hash-chaining or write-once storage for audit log integrity — per-organization SHA-256 hash chain (`hash`/`previousHash` columns, `apps/api/src/audit/audit-hash.util.ts`); `AuditLogService.record()` computes each entry's hash over its own content plus the previous entry's hash, `verifyChain()` recomputes and detects any break, exposed at `GET /audit-logs/verify` with a "Verify Integrity" button on the Audit Log page. Application-level hash-chaining, not write-once storage — detects tampering, doesn't prevent someone with direct DB access from rewriting history and recomputing the chain; documented as a known limitation, not a gap this session missed
 
 ### Module 7: Backup & Recovery
 - [ ] Task 7.1: Define backup and recovery procedures
@@ -54,9 +54,9 @@
 
 ### Module 9: Vulnerability Management
 - [ ] Task 9.1: Implement vulnerability scanning
-  - [ ] Subtask 9.1.1: Dependency and container scanning
-    - [ ] Activity: Add `pnpm audit` / Dependabot to CI — not built; deliberately deferred, a CI-pipeline change rather than an app module
-    - [ ] Activity: Add container image scanning to the CI pipeline — not built, same reason
+  - [x] Subtask 9.1.1: Dependency and container scanning
+    - [x] Activity: Add `pnpm audit` / Dependabot to CI — `pnpm audit --audit-level=high` step in `.github/workflows/ci.yml`'s `lint-typecheck-unit` job, `continue-on-error: true` for now (visibility first — this repo's existing dependency tree has untriaged findings, so making it a hard gate today would block unrelated PRs; tightening to a real gate is a follow-up once triaged). Dependabot itself (automated PRs) not configured — a repo-settings change, not code
+    - [x] Activity: Add container image scanning to the CI pipeline — Trivy (`aquasecurity/trivy-action`) scans both built images in the `docker-build` job, `exit-code: "0"` (same visibility-first reasoning)
   - [x] Subtask 9.1.2: Findings register
     - [x] Activity: `SecurityFindingModule` (`apps/api/src/security-findings`) — project-scoped, same CRUD+severity+status shape as Risk/Issue (`severity`: LOW-CRITICAL, `status`: OPEN → IN_REMEDIATION/ACCEPTED_RISK → RESOLVED), `ADMIN`/`GOVERNANCE_LEAD` write, audit-logged; a tab on the project detail page. Tracks findings however they're discovered (manual review, external scan, pen test) — it isn't itself a scanner, and doesn't yet feed the automated CI scanning above
 

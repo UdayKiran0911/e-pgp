@@ -2,17 +2,10 @@ import { Module } from '@nestjs/common';
 import { DeploymentApprovalsController } from './deployment-approvals.controller';
 import { DeploymentApprovalsService } from './deployment-approvals.service';
 import { AuthModule } from '../auth/auth.module';
-import { NotificationsModule } from '../notifications/notifications.module';
-import { WebhookConnectorsModule } from '../webhook-connectors/webhook-connectors.module';
-import { EmailModule } from '../email/email.module';
+import { GovernanceNotifierModule } from '../governance-notifier/governance-notifier.module';
 
 @Module({
-  imports: [
-    AuthModule,
-    NotificationsModule,
-    WebhookConnectorsModule,
-    EmailModule,
-  ],
+  imports: [AuthModule, GovernanceNotifierModule],
   controllers: [DeploymentApprovalsController],
   providers: [DeploymentApprovalsService],
   exports: [DeploymentApprovalsService],

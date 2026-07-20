@@ -51,14 +51,15 @@
     - [x] Activity: Workflow status stepper component (`apps/web/src/app/dashboard/projects`) — antd `Steps` per project, click-to-advance restricted to the one valid next stage, read-only for non-managers
 
 ### Module 7: Document Management
-- [ ] Task 7.1: Build document upload/versioning
+- [x] Task 7.1: Build document upload/versioning
   - [x] Subtask 7.1.1: API layer
     - [x] Activity: `DocumentModule`, simplified: link-based register (title + external URL + a version label) rather than native upload (`apps/api/src/documents`) — `ADMIN`/`GOVERNANCE_LEAD` write, audit-logged (`DOCUMENT_ADDED`, `DOCUMENT_UPDATED`)
     - [x] Activity: Native file upload/download — `StorageProvider` interface (`apps/api/src/storage/storage.types.ts`) with a day-1 `LocalDiskStorageService` implementation; `POST /documents/upload` (multipart) and `GET /documents/:id/download`, audit-logged (`DOCUMENT_UPLOADED`); S3-compatible swap deliberately deferred — needs a real bucket/provider decision, but the interface is already shaped for it
+    - [x] Activity: Version history — `DocumentVersion` append-only history table (see Phase 4 Module 6); `POST /documents/:id/reupload` snapshots the current version before saving the new file, audit-logged (`DOCUMENT_REUPLOADED`); `GET /documents/:id/versions` lists prior versions
   - [x] Subtask 7.1.2: UI layer
     - [x] Activity: Document list screen — a tab on the project detail page (`apps/web/src/app/dashboard/projects/[id]`), title links out to the external URL or the uploaded-file download endpoint depending on `storageKey`
     - [x] Activity: Upload flow — "Upload File" action on the Documents tab (`antd` `Upload` with manual submit), stores the file via `LocalDiskStorageService`
-    - [ ] Activity: Version history screen — only a single current `version` label is tracked, no history of prior versions
+    - [x] Activity: Version history screen — a "Versions" button per document opens a modal listing prior versions (with download/link) and, for uploaded files, a re-upload form
 
 ### Module 8: SOP Library
 - [x] Task 8.1: Build the standard operating procedure library

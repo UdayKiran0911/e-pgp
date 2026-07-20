@@ -20,6 +20,7 @@ export interface ProjectBody {
   status: string;
   governanceStage: string;
   organizationId: string;
+  metadata?: Record<string, string> | null;
 }
 
 export interface AuditLogBody {
@@ -61,6 +62,15 @@ export interface IssueBody {
   title: string;
   priority: string;
   status: string;
+}
+
+export interface ExternalReferenceBody {
+  id: string;
+  organizationId: string;
+  issueId: string;
+  provider: string;
+  externalId: string;
+  url: string;
 }
 
 export interface ChangeRequestBody {
@@ -120,6 +130,16 @@ export interface DocumentBody {
   title: string;
   url: string;
   version: string;
+  storageKey?: string | null;
+}
+
+export interface DocumentVersionBody {
+  id: string;
+  documentId: string;
+  version: string;
+  url: string;
+  storageKey: string | null;
+  createdAt: string;
 }
 
 export interface GovernanceGateBody {
@@ -218,6 +238,12 @@ export interface ProjectHealthScoreBody {
 export interface AuditSummaryBody {
   totalActions: number;
   byAction: Record<string, number>;
+}
+
+export interface AuditVerifyBody {
+  valid: boolean;
+  checked: number;
+  brokenAtId: string | null;
 }
 
 export interface AnalyticsOverviewBody {

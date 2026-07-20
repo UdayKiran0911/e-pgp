@@ -1,0 +1,7 @@
+{
+  "extends": "@epg/tsconfig/base.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["src"]
+}

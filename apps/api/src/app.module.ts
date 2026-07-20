@@ -37,6 +37,7 @@ import { ChecklistTemplatesModule } from './checklist-templates/checklist-templa
 import { EmailModule } from './email/email.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { MetricsMiddleware } from './metrics/metrics.middleware';
+import { ExternalReferencesModule } from './external-references/external-references.module';
 
 // Structured Logging (Phase 10 Module 7): pino via nestjs-pino, replacing
 // Nest's default console logger everywhere (main.ts wires
@@ -96,6 +97,7 @@ const loggerModule = LoggerModule.forRoot({
     ChecklistTemplatesModule,
     EmailModule,
     MetricsModule,
+    ExternalReferencesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

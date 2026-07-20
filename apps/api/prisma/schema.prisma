@@ -18,21 +18,21 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users     User[]
-  projects  Project[]
-  auditLogs AuditLog[]
-  risks           Risk[]
-  decisions       Decision[]
-  issues          Issue[]
-  changeRequests  ChangeRequest[]
-  requirements    Requirement[]
-  reviews         Review[]
-  checklistItems  ChecklistItem[]
-  departments     Department[]
-  sops            Sop[]
-  documents       Document[]
-  governanceGates GovernanceGate[]
-  customerSignoffs CustomerSignoff[]
+  users               User[]
+  projects            Project[]
+  auditLogs           AuditLog[]
+  risks               Risk[]
+  decisions           Decision[]
+  issues              Issue[]
+  changeRequests      ChangeRequest[]
+  requirements        Requirement[]
+  reviews             Review[]
+  checklistItems      ChecklistItem[]
+  departments         Department[]
+  sops                Sop[]
+  documents           Document[]
+  governanceGates     GovernanceGate[]
+  customerSignoffs    CustomerSignoff[]
   deploymentApprovals DeploymentApproval[]
   notifications       Notification[]
   knowledgeArticles   KnowledgeArticle[]
@@ -41,6 +41,7 @@ model Organization {
   securityFindings    SecurityFinding[]
   checklistTemplates  ChecklistTemplate[]
   emailLogs           EmailLog[]
+  externalReferences  ExternalReference[]
 }
 
 model User {
@@ -68,22 +69,28 @@ model Project {
   name            String
   status          ProjectStatus   @default(DRAFT)
   governanceStage GovernanceStage @default(INITIATION)
+  // Flexible custom fields (Phase 4 Module 7): a JSON column rather than an
+  // EAV table — the org defines whatever key/value pairs it needs (a cost
+  // center code, a delivery-partner name, ...) without a schema migration
+  // per field. Values are opaque strings from the API's point of view; no
+  // per-key validation or typing.
+  metadata        Json?
   organizationId  String
   organization    Organization    @relation(fields: [organizationId], references: [id])
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  auditLogs AuditLog[]
-  risks            Risk[]
-  decisions        Decision[]
-  issues           Issue[]
-  changeRequests   ChangeRequest[]
-  requirements     Requirement[]
-  reviews          Review[]
-  checklistItems   ChecklistItem[]
-  documents        Document[]
-  governanceGates  GovernanceGate[]
-  customerSignoffs CustomerSignoff[]
+  auditLogs           AuditLog[]
+  risks               Risk[]
+  decisions           Decision[]
+  issues              Issue[]
+  changeRequests      ChangeRequest[]
+  requirements        Requirement[]
+  reviews             Review[]
+  checklistItems      ChecklistItem[]
+  documents           Document[]
+  governanceGates     GovernanceGate[]
+  customerSignoffs    CustomerSignoff[]
   deploymentApprovals DeploymentApproval[]
   notifications       Notification[]
   securityFindings    SecurityFinding[]
@@ -171,17 +178,18 @@ model Decision {
 // Issue Register (Phase 6 Module 10): issues logged against a project, with
 // priority scoring and a lifecycle status. Simple CRUD, same shape as Risk.
 model Issue {
-  id             String        @id @default(uuid())
-  organizationId String
-  organization   Organization  @relation(fields: [organizationId], references: [id])
-  projectId      String
-  project        Project       @relation(fields: [projectId], references: [id])
-  title          String
-  description    String?
-  priority       IssuePriority
-  status         IssueStatus   @default(OPEN)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id                 String              @id @default(uuid())
+  organizationId     String
+  organization       Organization        @relation(fields: [organizationId], references: [id])
+  projectId          String
+  project            Project             @relation(fields: [projectId], references: [id])
+  title              String
+  description        String?
+  priority           IssuePriority
+  status             IssueStatus         @default(OPEN)
+  externalReferences ExternalReference[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 }
 
 enum IssuePriority {
@@ -196,6 +204,33 @@ enum IssueStatus {
   IN_PROGRESS
   RESOLVED
   CLOSED
+}
+
+// External Reference links (Phase 8 Modules 5/6/7/8 — Jira, Azure DevOps,
+// SharePoint, ServiceNow): these four vision-doc modules all reduce to the
+// same shape — "an external system's ticket/item/document has a
+// corresponding EPG issue" — so one model with a `provider` discriminator,
+// the same trick used for Review/GovernanceGate. This is a link-based
+// reference (external ID + URL the org pastes in), not a real two-way sync;
+// two-way sync needs real OAuth/PAT credentials per provider and is
+// deliberately not built here.
+model ExternalReference {
+  id             String                    @id @default(uuid())
+  organizationId String
+  organization   Organization              @relation(fields: [organizationId], references: [id])
+  issueId        String
+  issue          Issue                     @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  provider       ExternalReferenceProvider
+  externalId     String
+  url            String
+  createdAt      DateTime                  @default(now())
+}
+
+enum ExternalReferenceProvider {
+  JIRA
+  AZURE_DEVOPS
+  SHAREPOINT
+  SERVICENOW
 }
 
 // Change Requests (Phase 6 Module 7): the only register so far with a real
@@ -354,17 +389,36 @@ model Sop {
 // here — local disk is the "day 1" StorageProvider implementation behind
 // the same interface, so swapping it in later doesn't change this model.
 model Document {
-  id             String       @id @default(uuid())
+  id             String            @id @default(uuid())
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   Organization      @relation(fields: [organizationId], references: [id])
   projectId      String
-  project        Project      @relation(fields: [projectId], references: [id])
+  project        Project           @relation(fields: [projectId], references: [id])
   title          String
   url            String
   storageKey     String?
-  version        String       @default("1.0")
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  version        String            @default("1.0")
+  versions       DocumentVersion[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+// Document Versioning (Phase 4 Module 6 / Phase 5 Module 7 completion): an
+// append-only history table rather than row-versioning — every time a
+// document is re-uploaded, the document's *previous* url/storageKey/version
+// is snapshotted here before being overwritten, so prior files stay
+// downloadable. The `Document` row itself always reflects the current
+// version, matching how every other register in this platform works
+// (current state on the row, history in a side table — same shape as
+// AuditLog's relationship to the entities it logs).
+model DocumentVersion {
+  id         String   @id @default(uuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version    String
+  url        String
+  storageKey String?
+  createdAt  DateTime @default(now())
 }
 
 // Governance Gates (Phase 6 Modules 3 + 4 — Development + Testing
@@ -397,18 +451,18 @@ enum GateCategory {
 // e-signature capture (per the vision doc) — that's a separate,
 // customer-facing surface deliberately not built here.
 model CustomerSignoff {
-  id             String         @id @default(uuid())
+  id             String        @id @default(uuid())
   organizationId String
-  organization   Organization   @relation(fields: [organizationId], references: [id])
+  organization   Organization  @relation(fields: [organizationId], references: [id])
   projectId      String
-  project        Project        @relation(fields: [projectId], references: [id])
+  project        Project       @relation(fields: [projectId], references: [id])
   title          String
   customerName   String
-  status         SignoffStatus  @default(PENDING)
+  status         SignoffStatus @default(PENDING)
   requestedById  String
   notes          String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 }
 
 enum SignoffStatus {
@@ -572,6 +626,19 @@ model EmailLog {
 // belongs to an organization; projectId is set only for project-scoped
 // actions (e.g. status changes) and left null for org-wide ones (e.g. a
 // user's role changing).
+//
+// Tamper-evidence (Phase 9 Module 6): `hash` / `previousHash` form a
+// per-organization hash chain — each entry's hash covers its own content
+// plus the previous entry's hash, so altering or deleting a historical row
+// breaks the chain from that point forward. This is application-level
+// hash-chaining, not write-once/immutable storage — a party with direct
+// database access could still rewrite history and recompute the chain; it
+// guards against accidental/incidental tampering and makes *any* tampering
+// detectable via `AuditLogService.verifyChain()`, not against a fully
+// malicious DBA. A known race: two concurrent writes to the same org can
+// both read the same "latest" row and link to the same previousHash,
+// producing a chain with a harmless fork rather than a strict linked list;
+// acceptable for the audit trail's actual write volume.
 model AuditLog {
   id             String       @id @default(uuid())
   organizationId String
@@ -581,5 +648,7 @@ model AuditLog {
   actorId        String
   action         String
   metadata       Json?
+  previousHash   String?
+  hash           String
   createdAt      DateTime     @default(now())
 }

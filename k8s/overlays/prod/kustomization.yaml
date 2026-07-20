@@ -1,0 +1,13 @@
+# Prod overlay (Phase 10 Module 4): the base manifests already reflect
+# prod-shaped defaults (2 API replicas, NODE_ENV=production), so this
+# overlay's job is mainly to give prod its own namespace/prefix — kept as
+# a real overlay (not just applying base/ directly) so dev/staging/prod
+# stay symmetrical and a future prod-only tweak (e.g. higher replica
+# counts, a stricter resource ceiling) has an obvious place to land.
+# `kubectl apply -k k8s/overlays/prod`.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namePrefix: prod-
+namespace: epg-platform-prod
+resources:
+  - ../../base

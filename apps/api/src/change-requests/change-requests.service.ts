@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
+import { GovernanceNotifierService } from '../governance-notifier/governance-notifier.service';
 import { CreateChangeRequestDto } from './dto/create-change-request.dto';
 import { UpdateChangeRequestDto } from './dto/update-change-request.dto';
 import { isValidChangeRequestTransition } from './change-request-status';
@@ -14,6 +15,7 @@ export class ChangeRequestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditLog: AuditLogService,
+    private readonly governanceNotifier: GovernanceNotifierService,
   ) {}
 
   findAllInOrganization(organizationId: string, projectId?: string) {
@@ -93,6 +95,14 @@ export class ChangeRequestsService {
         actorId,
         action: 'CHANGE_REQUEST_STATUS_CHANGED',
         metadata: { from: existing.status, to: dto.status },
+      });
+      await this.governanceNotifier.notifyDecision({
+        organizationId,
+        projectId: changeRequest.projectId,
+        recipientUserId: existing.requestedById,
+        title: `Change request "${changeRequest.title}" is now ${dto.status}`,
+        emailSubject: `Change request "${changeRequest.title}" is now ${dto.status}`,
+        emailBody: `Change request "${changeRequest.title}" is now ${dto.status}.`,
       });
     }
 

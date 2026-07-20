@@ -1,12 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Alert, Card, Space, Statistic, Table, Tag, Typography } from 'antd';
+import {
+  Alert,
+  Button,
+  Card,
+  Space,
+  Statistic,
+  Table,
+  Tag,
+  Typography,
+} from 'antd';
+import { SafetyCertificateOutlined } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth-context';
 import { api, ApiError } from '@/lib/api-client';
 import { semanticColor, spacing } from '@epg/design-tokens';
 import { glassPanelStyle } from '@/lib/ui-style';
-import type { AuditLogEntry, AuditSummary, PublicUser } from '@/lib/types';
+import type {
+  AuditChainVerification,
+  AuditLogEntry,
+  AuditSummary,
+  PublicUser,
+} from '@/lib/types';
 
 const { Text } = Typography;
 
@@ -31,6 +46,23 @@ export default function AuditLogPage() {
   const [summary, setSummary] = useState<AuditSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyResult, setVerifyResult] = useState<AuditChainVerification | null>(
+    null,
+  );
+
+  const handleVerify = async () => {
+    if (!token) return;
+    setVerifying(true);
+    try {
+      setVerifyResult(await api.verifyAuditChain(token));
+    } catch (err) {
+      if (!(err instanceof ApiError)) throw err;
+      setError(err.message);
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -74,6 +106,15 @@ export default function AuditLogPage() {
         <Card
           style={{ ...glassPanelStyle, marginBottom: spacing[4] }}
           title="Audit Trail Summary"
+          extra={
+            <Button
+              icon={<SafetyCertificateOutlined />}
+              loading={verifying}
+              onClick={() => void handleVerify()}
+            >
+              Verify Integrity
+            </Button>
+          }
         >
           <Statistic title="Total governed actions" value={summary.totalActions} />
           <Space wrap style={{ marginTop: spacing[3] }}>
@@ -86,6 +127,18 @@ export default function AuditLogPage() {
                 </Tag>
               ))}
           </Space>
+          {verifyResult && (
+            <Alert
+              style={{ marginTop: spacing[3] }}
+              type={verifyResult.valid ? 'success' : 'error'}
+              showIcon
+              title={
+                verifyResult.valid
+                  ? `Hash chain intact — ${verifyResult.checked} entries verified.`
+                  : `Hash chain broken at entry ${verifyResult.brokenAtId} — the audit trail may have been tampered with.`
+              }
+            />
+          )}
         </Card>
       )}
 

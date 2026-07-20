@@ -13,6 +13,7 @@ Semantic Versioning (`MAJOR.MINOR.PATCH`) per deployable app. Bumped by the
 
 | Version | Date | Notes |
 |---|---|---|
+| 0.9.0 | 2026-07-20 | Document version history modal (view prior versions, re-upload a new one) on the Documents tab; "Custom Fields" editor on the project detail header; "External Refs" links modal (Jira/Azure DevOps/SharePoint/ServiceNow) on the Issue Register tab; "Verify Integrity" button on the Audit Log page. |
 | 0.8.0 | 2026-07-20 | New pages Checklist Templates and Email Log; Documents tab gains a real file-upload flow (in addition to the existing external-link register) with download links routed through `API_URL`; Checklist tab gains an "Apply Template" action. |
 | 0.7.0 | 2026-07-20 | Project detail page grows to 12 registers (adds Security Findings) plus a project health-score badge in the header; new pages Webhooks, Plugins, Analytics; Audit Log page gains a computed summary card; Organization Settings gains a data-export download button. |
 | 0.6.0 | 2026-07-20 | Project detail page grows to 11 registers (Risk, Decision, Issue, Change Request, Requirement, Review, Checklist, Document, Governance Gate, Customer Sign-off, Deployment Approval), reorganized into 3 grouped categories (Planning & Tracking / Governance & Reviews / Documents & Sign-off) to keep the tab bar navigable; new org-level pages (Departments, SOPs, Knowledge Base, Search, Organization Settings); notification bell with unread badge in the sidebar; full "Glass Gradient" visual pass (violet/cyan theme, frosted-glass panels, collapsible icon sidebar). |
@@ -25,6 +26,7 @@ Semantic Versioning (`MAJOR.MINOR.PATCH`) per deployable app. Bumped by the
 
 | Version | Date | Notes |
 |---|---|---|
+| 0.9.0 | 2026-07-20 | Document Versioning (`DocumentVersion` history table + reupload endpoint), Project custom metadata (`metadata Json?`), audit log tamper-evidence (per-org SHA-256 hash chain + `/audit-logs/verify`), `ExternalReference` links (Jira/Azure DevOps/SharePoint/ServiceNow, shared model), `GovernanceNotifierService` extracted and wired into Change Requests, CI dependency/container vulnerability scanning (`pnpm audit` + Trivy, non-blocking). |
 | 0.8.0 | 2026-07-20 | Checklist Templates (org-level, applied to a project via snapshot copy — closes out Checklist Engine), native document upload/download (`StorageProvider` interface + `LocalDiskStorageService`), Email Engine outbox (`EmailLog`, wired as a 4th Deployment Governance notification channel), structured logging (`nestjs-pino`), Prometheus metrics (`/metrics`), and a k6 performance-testing script. |
 | 0.7.0 | 2026-07-20 | Ten more modules, favoring non-AI stand-ins for Phase 7's LLM-flavored ones: Requirement Analyzer (rule-based flags), AI Audit Assistant (computed summary), AI Risk Prediction (heuristic `ProjectHealthService` score), Analytics (org-wide rollup of the above). Plus Webhook Connectors (Slack/Teams, AES-256-GCM-encrypted URLs via a new `EncryptionService`), Plugin Framework (manifest registry), Security Findings (Vulnerability Management register), a live OpenAPI spec (`@nestjs/swagger`), and on-demand Organization data export (Backup & Recovery). |
 | 0.6.0 | 2026-07-20 | Fourteen new modules on top of the audit trail and governance workflow: Risk/Decision/Issue Registers, Change Requests, Requirements, Reviews (Architecture/Security/Performance), Checklist, Departments, SOPs, Documents, Governance Gates, Customer Sign-off, Deployment Approvals (service-layer-enforced block on required gates/sign-offs, per Phase 6 Module 12), Notifications (in-app, system-generated), Knowledge Articles, and cross-register Enterprise Search — all org-scoped, RBAC-gated, and audit-logged following the established CRUD shape; `Review` and `GovernanceGate` each share one entity across multiple vision-doc modules via a type/category discriminator. |
@@ -34,6 +36,12 @@ Semantic Versioning (`MAJOR.MINOR.PATCH`) per deployable app. Bumped by the
 | 0.2.0 | 2026-07-17 | Project Portfolio: `ProjectModule` CRUD with a governed status-transition state machine and audit-log writes on create/status-change. Fixed a real Prisma 7 WASM/Jest incompatibility (`--experimental-vm-modules`) blocking integration tests, and the health check's overly strict 1s timeout. |
 | 0.1.0 | 2026-07-14 | Authentication (register/login/me, JWT + bcryptjs), Organization Management, User Management, and RBAC (`RolesGuard` + `@Roles()`). Adds `passwordHash`/`isActive` to `User`. |
 | 0.0.1 | 2026-07-13 | Initial scaffold: NestJS + Prisma (PostgreSQL via `@prisma/adapter-pg`), health check, base schema (Organization/User/Project/AuditLog). |
+
+## packages/sdk
+
+| Version | Date | Notes |
+|---|---|---|
+| 0.1.0 | 2026-07-20 | Initial release: `@epg/sdk` generates fully-typed `paths` via `openapi-typescript` from a snapshot of the live OpenAPI spec, wrapped in a thin `openapi-fetch`-based `createEpgClient()`. Consumed as a workspace dependency; not published to a registry. |
 
 ## packages/design-tokens
 

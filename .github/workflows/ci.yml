@@ -35,6 +35,19 @@ jobs:
       - run: pnpm ui-audit --all
       - run: pnpm test
 
+      # Vulnerability Management (Phase 9 Module 9): surfaces known
+      # dependency advisories on every PR. `continue-on-error` for now —
+      # this repo's transitive dependency tree already carries findings
+      # this session hasn't triaged, so making it a hard gate today would
+      # block unrelated PRs on pre-existing issues rather than new ones.
+      # Same "visibility first, hard gate later" pattern as the manual
+      # GovernanceGate attestations elsewhere in this platform — tightening
+      # this to fail the build is a follow-up once the current findings
+      # are triaged.
+      - name: Dependency vulnerability scan (pnpm audit)
+        continue-on-error: true
+        run: pnpm audit --audit-level=high
+
   integration:
     name: Integration tests
     runs-on: ubuntu-latest
@@ -129,12 +142,34 @@ jobs:
           context: .
           file: apps/web/Dockerfile
           push: false
+          load: true
+          tags: epg-web:ci
       - name: Build api image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: apps/api/Dockerfile
           push: false
+          load: true
+          tags: epg-api:ci
+
+      # Vulnerability Management (Phase 9 Module 9): scans the images this
+      # job just built for known CVEs. `exit-code: 0` — visibility only for
+      # now, same reasoning as the `pnpm audit` step above; the base images
+      # already carry findings this session hasn't triaged, so this isn't a
+      # merge gate yet.
+      - name: Scan web image (Trivy)
+        uses: aquasecurity/trivy-action@0.29.0
+        with:
+          image-ref: epg-web:ci
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+      - name: Scan api image (Trivy)
+        uses: aquasecurity/trivy-action@0.29.0
+        with:
+          image-ref: epg-api:ci
+          severity: CRITICAL,HIGH
+          exit-code: "0"
 
   publish:
     name: Publish images to GHCR

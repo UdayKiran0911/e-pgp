@@ -22,7 +22,8 @@
     "test:e2e": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-e2e.json",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "perf": "k6 run perf/governance-workflow.k6.js"
+    "perf": "k6 run perf/governance-workflow.k6.js",
+    "export:openapi": "ts-node -r ./scripts/register-js-ext-shim.js -r tsconfig-paths/register scripts/export-openapi-spec.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
