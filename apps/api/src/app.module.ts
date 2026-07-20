@@ -1,5 +1,7 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { LoggerModule } from 'nestjs-pino';
+import { randomUUID } from 'crypto';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -31,10 +33,37 @@ import { PluginsModule } from './plugins/plugins.module';
 import { SecurityFindingsModule } from './security-findings/security-findings.module';
 import { ProjectHealthModule } from './project-health/project-health.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { ChecklistTemplatesModule } from './checklist-templates/checklist-templates.module';
+import { EmailModule } from './email/email.module';
+import { MetricsModule } from './metrics/metrics.module';
+import { MetricsMiddleware } from './metrics/metrics.middleware';
+
+// Structured Logging (Phase 10 Module 7): pino via nestjs-pino, replacing
+// Nest's default console logger everywhere (main.ts wires
+// `app.useLogger(app.get(Logger))`). JSON lines in production, pretty-
+// printed in development; every request gets a stable `req.id` (reused
+// from an incoming X-Request-Id header when present) so a request can be
+// traced across every log line it produces. Centralized log aggregation
+// (shipping these lines to a log store) is a separate infra decision,
+// deliberately not made here — this establishes the format, so wiring
+// one in later is a transport-config change, not a rewrite.
+const loggerModule = LoggerModule.forRoot({
+  pinoHttp: {
+    genReqId: (req: {
+      headers: Record<string, string | string[] | undefined>;
+    }) => (req.headers['x-request-id'] as string | undefined) ?? randomUUID(),
+    transport:
+      process.env.NODE_ENV !== 'production'
+        ? { target: 'pino-pretty', options: { singleLine: true } }
+        : undefined,
+    redact: ['req.headers.authorization'],
+  },
+});
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    loggerModule,
     PrismaModule,
     AuditLogModule,
     HealthModule,
@@ -64,8 +93,15 @@ import { AnalyticsModule } from './analytics/analytics.module';
     SecurityFindingsModule,
     ProjectHealthModule,
     AnalyticsModule,
+    ChecklistTemplatesModule,
+    EmailModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(MetricsMiddleware).forRoutes('*');
+  }
+}

@@ -230,3 +230,37 @@ export interface AnalyticsOverviewBody {
   auditReadiness: { gateCompletionRate: number; signoffCompletionRate: number };
   adoption: Record<string, { total: number; last30Days: number }>;
 }
+
+export interface ChecklistTemplateItemBody {
+  id: string;
+  templateId: string;
+  title: string;
+  order: number;
+}
+
+export interface ChecklistTemplateBody {
+  id: string;
+  organizationId: string;
+  name: string;
+  description: string | null;
+  items: ChecklistTemplateItemBody[];
+}
+
+export interface DocumentUploadBody {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  title: string;
+  url: string;
+  storageKey: string | null;
+  version: string;
+}
+
+export interface EmailLogBody {
+  id: string;
+  organizationId: string;
+  projectId: string | null;
+  recipientEmail: string;
+  subject: string;
+  body: string;
+}

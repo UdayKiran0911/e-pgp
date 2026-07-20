@@ -2,6 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { DocumentsService } from './documents.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
+import { LocalDiskStorageService } from '../storage/local-disk-storage.service';
 
 describe('DocumentsService', () => {
   let service: DocumentsService;
@@ -15,6 +16,11 @@ describe('DocumentsService', () => {
     };
   };
   let auditLog: { record: jest.Mock };
+  let storage: {
+    save: jest.Mock;
+    getAbsolutePath: jest.Mock;
+    delete: jest.Mock;
+  };
 
   const orgId = 'org-1';
   const actorId = 'user-1';
@@ -41,9 +47,15 @@ describe('DocumentsService', () => {
       },
     };
     auditLog = { record: jest.fn() };
+    storage = {
+      save: jest.fn().mockResolvedValue('generated-key.pdf'),
+      getAbsolutePath: jest.fn().mockReturnValue('/uploads/generated-key.pdf'),
+      delete: jest.fn(),
+    };
     service = new DocumentsService(
       prisma as unknown as PrismaService,
       auditLog as unknown as AuditLogService,
+      storage as unknown as LocalDiskStorageService,
     );
   });
 
@@ -121,5 +133,73 @@ describe('DocumentsService', () => {
       service.update(document.id, 'org-2', actorId, { title: 'X' }),
     ).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.document.update).not.toHaveBeenCalled();
+  });
+
+  describe('uploadFile', () => {
+    it('rejects uploading against a project outside the caller organization', async () => {
+      prisma.project.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.uploadFile(orgId, actorId, {
+          projectId: project.id,
+          title: 'Threat Model',
+          buffer: Buffer.from('pdf-bytes'),
+          originalFilename: 'threat-model.pdf',
+        }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(storage.save).not.toHaveBeenCalled();
+    });
+
+    it('saves the file via the storage provider and points url at the download endpoint', async () => {
+      prisma.project.findFirst.mockResolvedValue(project);
+      prisma.document.create.mockImplementation(
+        ({ data }: { data: Record<string, unknown> }) => Promise.resolve(data),
+      );
+
+      const result = await service.uploadFile(orgId, actorId, {
+        projectId: project.id,
+        title: 'Threat Model',
+        buffer: Buffer.from('pdf-bytes'),
+        originalFilename: 'threat-model.pdf',
+      });
+
+      expect(storage.save).toHaveBeenCalledWith(
+        Buffer.from('pdf-bytes'),
+        'threat-model.pdf',
+      );
+      expect(result.storageKey).toBe('generated-key.pdf');
+      expect(result.url).toBe(`/documents/${result.id}/download`);
+      expect(auditLog.record).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'DOCUMENT_UPLOADED' }),
+      );
+    });
+  });
+
+  describe('getFileForDownload', () => {
+    it('rejects a document that is an external link, not an uploaded file', async () => {
+      prisma.document.findFirst.mockResolvedValue({
+        ...document,
+        storageKey: null,
+      });
+
+      await expect(
+        service.getFileForDownload(document.id, orgId),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('resolves the absolute path via the storage provider for an uploaded file', async () => {
+      prisma.document.findFirst.mockResolvedValue({
+        ...document,
+        storageKey: 'generated-key.pdf',
+      });
+
+      const result = await service.getFileForDownload(document.id, orgId);
+
+      expect(storage.getAbsolutePath).toHaveBeenCalledWith('generated-key.pdf');
+      expect(result).toEqual({
+        title: `${document.title}.pdf`,
+        absolutePath: '/uploads/generated-key.pdf',
+      });
+    });
   });
 });

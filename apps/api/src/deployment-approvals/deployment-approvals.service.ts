@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { WebhookConnectorsService } from '../webhook-connectors/webhook-connectors.service';
+import { EmailService } from '../email/email.service';
 import { CreateDeploymentApprovalDto } from './dto/create-deployment-approval.dto';
 import { UpdateDeploymentApprovalDto } from './dto/update-deployment-approval.dto';
 import { isValidDeploymentTransition } from './deployment-status';
@@ -19,6 +20,7 @@ export class DeploymentApprovalsService {
     private readonly auditLog: AuditLogService,
     private readonly notifications: NotificationsService,
     private readonly webhooks: WebhookConnectorsService,
+    private readonly email: EmailService,
   ) {}
 
   findAllInOrganization(organizationId: string, projectId?: string) {
@@ -119,6 +121,25 @@ export class DeploymentApprovalsService {
           ? `Deployment "${approval.title}" approved.`
           : `Deployment "${approval.title}" blocked.`,
       );
+      const requester = await this.prisma.user.findUnique({
+        where: { id: existing.requestedById },
+        select: { email: true },
+      });
+      if (requester) {
+        await this.email.send({
+          organizationId,
+          projectId: approval.projectId,
+          recipientEmail: requester.email,
+          subject:
+            dto.status === DeploymentStatus.APPROVED
+              ? `Deployment "${approval.title}" approved`
+              : `Deployment "${approval.title}" blocked`,
+          body:
+            dto.status === DeploymentStatus.BLOCKED && dto.notes
+              ? dto.notes
+              : `Deployment "${approval.title}" is now ${dto.status}.`,
+        });
+      }
     }
 
     return approval;

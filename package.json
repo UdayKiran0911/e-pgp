@@ -18,6 +18,7 @@
     "test:e2e": "turbo run test:e2e",
     "test:all": "turbo run lint typecheck test",
     "ui-audit": "node scripts/ui-audit.js",
+    "contrast-audit": "node scripts/contrast-audit.js",
     "prepare": "husky"
   },
   "devDependencies": {

@@ -39,6 +39,8 @@ model Organization {
   webhookConnectors   WebhookConnector[]
   pluginManifests     PluginManifest[]
   securityFindings    SecurityFinding[]
+  checklistTemplates  ChecklistTemplate[]
+  emailLogs           EmailLog[]
 }
 
 model User {
@@ -85,6 +87,7 @@ model Project {
   deploymentApprovals DeploymentApproval[]
   notifications       Notification[]
   securityFindings    SecurityFinding[]
+  emailLogs           EmailLog[]
 }
 
 enum ProjectStatus {
@@ -275,10 +278,8 @@ enum ReviewStatus {
   CHANGES_REQUESTED
 }
 
-// Checklist Engine (Phase 5 Module 9), simplified: per-project checklist
-// items with a done/not-done toggle. A templated-checklist layer (reusable
-// templates applied to new projects) is a natural follow-up once this
-// proves useful, not built preemptively.
+// Checklist Engine (Phase 5 Module 9): per-project checklist items with a
+// done/not-done toggle, optionally seeded in bulk from a ChecklistTemplate.
 model ChecklistItem {
   id             String       @id @default(uuid())
   organizationId String
@@ -289,6 +290,30 @@ model ChecklistItem {
   isDone         Boolean      @default(false)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+}
+
+// Checklist templates (Phase 5 Module 9 — templating layer): an org-level,
+// reusable, ordered list of checklist item titles. "Apply to project"
+// bulk-creates ChecklistItems from a template rather than the template
+// itself being linked to created items — templates can change later
+// without retroactively altering already-applied checklists.
+model ChecklistTemplate {
+  id             String                  @id @default(uuid())
+  organizationId String
+  organization   Organization            @relation(fields: [organizationId], references: [id])
+  name           String
+  description    String?
+  items          ChecklistTemplateItem[]
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+}
+
+model ChecklistTemplateItem {
+  id         String            @id @default(uuid())
+  templateId String
+  template   ChecklistTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  title      String
+  order      Int
 }
 
 // Department Management (Phase 5 Module 2): org-level hierarchy, not
@@ -320,10 +345,14 @@ model Sop {
   updatedAt      DateTime     @updatedAt
 }
 
-// Document Management (Phase 5 Module 7), simplified: a link-based
-// register (title + external URL + a version label) rather than native
-// file upload/storage. Real S3-compatible storage integration is a
-// separate infra decision, deliberately not made here.
+// Document Management (Phase 5 Module 7): a link-based register (title +
+// URL + a version label). `storageKey` is set only for files actually
+// uploaded through us (served from local disk, see apps/api/src/storage)
+// — `url` then points at our own download endpoint. External links
+// (`storageKey` null) work exactly as before. Real cloud object storage
+// (S3-compatible) is a separate infra decision, deliberately not made
+// here — local disk is the "day 1" StorageProvider implementation behind
+// the same interface, so swapping it in later doesn't change this model.
 model Document {
   id             String       @id @default(uuid())
   organizationId String
@@ -332,6 +361,7 @@ model Document {
   project        Project      @relation(fields: [projectId], references: [id])
   title          String
   url            String
+  storageKey     String?
   version        String       @default("1.0")
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -516,6 +546,25 @@ enum SecurityFindingStatus {
   IN_REMEDIATION
   RESOLVED
   ACCEPTED_RISK
+}
+
+// Email Engine (Phase 8 Module 3), simplified: an append-only outbox log
+// rather than a real transactional-email-provider integration — every
+// "send" is recorded here (recipient, subject, rendered body) instead of
+// actually leaving the building. Picking a real provider (SendGrid,
+// Postmark, SES) and wiring templates through it is a separate decision,
+// deliberately not made here; this establishes the templating + call-site
+// wiring so swapping in a real provider later is a one-file change.
+model EmailLog {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  projectId      String?
+  project        Project?     @relation(fields: [projectId], references: [id])
+  recipientEmail String
+  subject        String
+  body           String
+  createdAt      DateTime     @default(now())
 }
 
 // Append-only audit trail — every governed action within an organization is

@@ -1,0 +1,30 @@
+# Assumes an nginx-ingress controller is already installed on the
+# cluster. TLS/cert-manager annotations and a real hostname are left as
+# environment overlays (see k8s/README.md) rather than hardcoded here.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: epg-ingress
+  namespace: epg-platform
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: epg.example.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: epg-api
+                port:
+                  number: 4000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: epg-web
+                port:
+                  number: 3000

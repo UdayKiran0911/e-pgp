@@ -48,7 +48,11 @@ export const color = {
     900: '#101216',
   },
   success: { 500: '#1a9d5c', 100: '#dcf5e8' },
-  warning: { 500: '#c98a05', 100: '#fbedcd' },
+  // Darkened from #c98a05 after the contrast-audit script (Phase 3
+  // Module 8) found the original shade failed WCAG AA (2.54:1, needs
+  // 3:1) against warning.100 as a background. #a66c03 clears it at
+  // 3.80:1 without a drastic hue shift.
+  warning: { 500: '#a66c03', 100: '#fbedcd' },
   error: { 500: '#d5372f', 100: '#f9dcda' },
   info: { 500: '#06b6d4', 100: '#cffafe' },
 } as const;

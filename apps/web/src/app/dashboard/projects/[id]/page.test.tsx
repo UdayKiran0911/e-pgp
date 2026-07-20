@@ -124,6 +124,7 @@ vi.mock("@/lib/api-client", async () => {
           projectId: "p1",
           title: "Solution Design Doc",
           url: "https://docs.example.com/solution-design",
+          storageKey: null,
           version: "1.0",
           createdAt: "2026-01-01T00:00:00.000Z",
           updatedAt: "2026-01-01T00:00:00.000Z",
@@ -201,6 +202,19 @@ vi.mock("@/lib/api-client", async () => {
           blockedDeployments: 0,
         },
       }),
+      listChecklistTemplates: vi.fn().mockResolvedValue([
+        {
+          id: "template1",
+          organizationId: "org-1",
+          name: "Pre-launch checklist",
+          description: null,
+          items: [
+            { id: "ti1", templateId: "template1", title: "Confirm rollback plan", order: 0 },
+          ],
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+      ]),
     },
   };
 });

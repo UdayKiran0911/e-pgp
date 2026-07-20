@@ -48,6 +48,15 @@ proactively rather than waiting for CI to catch it.
    component type should use the same radius/shadow token everywhere. This
    requires judgment, not just grep.
 
+5. **If the change touched `packages/design-tokens/src/index.ts` itself**
+   (a new or edited color token), also run `pnpm contrast-audit` — checks
+   the real text-on-background token pairs against WCAG 2.1 AA (4.5:1
+   normal text, 3:1 large text/UI). A new failure means the token needs a
+   darker/lighter shade before it ships, not a suppression — see
+   `scripts/contrast-audit.js` for the exact pairs checked and
+   `packages/design-tokens/src/index.ts`'s `warning` token for a worked
+   example of a real fix (darkened after this check caught it).
+
 ## What NOT to do
 
 - Don't suppress a violation with an eslint-disable comment to make the

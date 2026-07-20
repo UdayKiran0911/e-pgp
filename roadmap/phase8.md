@@ -27,8 +27,9 @@
 ### Module 3: Email Engine
 - [ ] Task 3.1: Build the transactional email engine
   - [ ] Subtask 3.1.1: Template system + provider integration
-    - [ ] Activity: Integrate a transactional email provider
-    - [ ] Activity: Build templates for sign-off requests and governance alerts
+    - [x] Activity: In-app email outbox — `EmailModule` (`apps/api/src/email`), `send()` writes an `EmailLog` row (recipient, subject, body) rather than dispatching over SMTP/a provider API; wired as a 4th notification channel into Deployment Governance decisions alongside audit log, in-app notification, and webhook (Phase 6 Module 12); read-only `apps/web/src/app/dashboard/email-logs` UI with a disclaimer that mail is logged, not sent
+    - [ ] Activity: Integrate a real transactional email provider (SMTP/SES/SendGrid/etc.) — not built; deliberately deferred, needs a real provider/credential decision
+    - [ ] Activity: Build templates for sign-off requests and governance alerts — subject/body are currently inline strings at the call site, no template system yet
 
 ### Module 4: Teams/Slack Integration
 - [x] Task 4.1: Build Teams/Slack notification connectors

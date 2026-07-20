@@ -156,3 +156,36 @@ data seeded for every new register against the same real org/projects.
 Full verification remains deferred to the next session per the standing
 cadence rule, though the pre-push hook (lint/typecheck/unit tests) will
 still run and block the eventual push regardless.
+
+A sixth batch closed out two long-deferred MVP gaps and rounded out Phase
+10's engineering baseline. Document Management (Phase 5 Module 7) gained
+real file upload/download: a `StorageProvider` interface with a day-1
+`LocalDiskStorageService` implementation (`apps/api/src/storage`), so a
+future S3-compatible swap won't touch call sites; the Documents tab now
+supports uploading a real file alongside the existing external-link
+register. Checklist Engine (Phase 5 Module 9) gained templating —
+org-level `ChecklistTemplate`s with ordered items, applied to a project
+via a snapshot copy (not a live link) — closing the module out fully with
+a new sidebar page and an "Apply Template" action on the Checklist tab.
+Email Engine (Phase 8 Module 3) shipped as an outbox MVP: an `EmailLog`
+row per send rather than a real SMTP/provider integration, wired as a 4th
+notification channel into Deployment Governance decisions (audit log,
+in-app notification, webhook, and now email), with a read-only viewer
+page. Phase 10 picked up five more modules: structured logging
+(`nestjs-pino` app-wide), Prometheus metrics (`/metrics`, unauthenticated
+by design pending network restriction), base Kubernetes manifests
+(`k8s/base/`, Kustomize — environment overlays still deferred), a GHCR
+image-publish CD job on push to `main` (deploy-to-cluster itself still
+deferred — no cluster/environment decision made), a k6 load-testing script
+for the governance workflow endpoints, and `CONTRIBUTING.md` codifying the
+session's "flag, don't fake" scope-discipline pattern. Separately, the new
+`scripts/contrast-audit.js` (Phase 3 Module 8) found two real WCAG AA
+contrast failures on first run; the `warning` token was darkened to fix
+one, while the `brand`/violet failure was deliberately left as-is and
+flagged rather than silently changing the established brand identity.
+Sample data and manual smoke tests (real upload/download round-trip,
+template apply, a full 4-channel deployment-approval decision) were
+verified against the live API and Neon database. Full lint/typecheck/unit
+verification for this batch happens before the push that closes it out,
+consistent with the practice of pre-checking locally even though the
+standing cadence rule only mandates the pre-push hook itself.

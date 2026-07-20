@@ -52,11 +52,12 @@
 
 ### Module 7: Document Management
 - [ ] Task 7.1: Build document upload/versioning
-  - [ ] Subtask 7.1.1: API layer
+  - [x] Subtask 7.1.1: API layer
     - [x] Activity: `DocumentModule`, simplified: link-based register (title + external URL + a version label) rather than native upload (`apps/api/src/documents`) — `ADMIN`/`GOVERNANCE_LEAD` write, audit-logged (`DOCUMENT_ADDED`, `DOCUMENT_UPDATED`)
-    - [ ] Activity: S3-compatible storage integration — not built; deliberately deferred, needs a real infra decision (bucket/provider, upload flow) rather than the link-based MVP
-  - [ ] Subtask 7.1.2: UI layer
-    - [x] Activity: Document list screen — a tab on the project detail page (`apps/web/src/app/dashboard/projects/[id]`), title links out to the external URL
+    - [x] Activity: Native file upload/download — `StorageProvider` interface (`apps/api/src/storage/storage.types.ts`) with a day-1 `LocalDiskStorageService` implementation; `POST /documents/upload` (multipart) and `GET /documents/:id/download`, audit-logged (`DOCUMENT_UPLOADED`); S3-compatible swap deliberately deferred — needs a real bucket/provider decision, but the interface is already shaped for it
+  - [x] Subtask 7.1.2: UI layer
+    - [x] Activity: Document list screen — a tab on the project detail page (`apps/web/src/app/dashboard/projects/[id]`), title links out to the external URL or the uploaded-file download endpoint depending on `storageKey`
+    - [x] Activity: Upload flow — "Upload File" action on the Documents tab (`antd` `Upload` with manual submit), stores the file via `LocalDiskStorageService`
     - [ ] Activity: Version history screen — only a single current `version` label is tracked, no history of prior versions
 
 ### Module 8: SOP Library
@@ -67,12 +68,13 @@
     - [x] Activity: SOP library browser screen (`apps/web/src/app/dashboard/sops`) — table with category tags and expandable content preview
 
 ### Module 9: Checklist Engine
-- [ ] Task 9.1: Build the configurable checklist engine
-  - [ ] Subtask 9.1.1: API layer
+- [x] Task 9.1: Build the configurable checklist engine
+  - [x] Subtask 9.1.1: API layer
     - [x] Activity: `ChecklistModule` with per-project checklists (`apps/api/src/checklist`) — simple title + `isDone` toggle, `ADMIN`/`GOVERNANCE_LEAD` write, audit-logged (`CHECKLIST_ITEM_ADDED`, `CHECKLIST_ITEM_TOGGLED`)
-    - [ ] Activity: Templated checklists (reusable templates applied to new projects) — not built; deliberately deferred until the simple per-project version proves useful
+    - [x] Activity: Templated checklists (reusable templates applied to new projects) — `ChecklistTemplateModule` (`apps/api/src/checklist-templates`), org-level named templates with ordered items, `POST /checklist-templates/:id/apply` snapshot-copies the template's items onto a project's checklist, audit-logged (`CHECKLIST_TEMPLATE_APPLIED`)
   - [x] Subtask 9.1.2: UI layer
     - [x] Activity: Interactive checklist component (`apps/web/src/app/dashboard/projects/[id]`) — a tab with a `Checkbox` list; progress tracking (e.g. "3/8 done") not yet surfaced
+    - [x] Activity: Checklist template management screen (`apps/web/src/app/dashboard/checklist-templates`) — CRUD for org-level templates; "Apply Template" action on the project Checklist tab
 
 ## Deliverables Checklist
 - [ ] Module Specifications

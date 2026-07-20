@@ -34,6 +34,8 @@ import {
   BarChartOutlined,
   ApiOutlined,
   AppstoreOutlined,
+  CheckSquareOutlined,
+  MailOutlined,
 } from '@ant-design/icons';
 import { RequireAuth } from '@/components/require-auth';
 import { useAuth } from '@/lib/auth-context';
@@ -117,6 +119,13 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
       label: <Link href="/dashboard/knowledge">Knowledge Base</Link>,
     },
     {
+      key: '/dashboard/checklist-templates',
+      icon: <CheckSquareOutlined />,
+      label: (
+        <Link href="/dashboard/checklist-templates">Checklist Templates</Link>
+      ),
+    },
+    {
       key: '/dashboard/search',
       icon: <SearchOutlined />,
       label: <Link href="/dashboard/search">Search</Link>,
@@ -132,6 +141,11 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             key: '/dashboard/analytics',
             icon: <BarChartOutlined />,
             label: <Link href="/dashboard/analytics">Analytics</Link>,
+          },
+          {
+            key: '/dashboard/email-logs',
+            icon: <MailOutlined />,
+            label: <Link href="/dashboard/email-logs">Email Log</Link>,
           },
         ]
       : []),

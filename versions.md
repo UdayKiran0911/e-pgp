@@ -13,6 +13,7 @@ Semantic Versioning (`MAJOR.MINOR.PATCH`) per deployable app. Bumped by the
 
 | Version | Date | Notes |
 |---|---|---|
+| 0.8.0 | 2026-07-20 | New pages Checklist Templates and Email Log; Documents tab gains a real file-upload flow (in addition to the existing external-link register) with download links routed through `API_URL`; Checklist tab gains an "Apply Template" action. |
 | 0.7.0 | 2026-07-20 | Project detail page grows to 12 registers (adds Security Findings) plus a project health-score badge in the header; new pages Webhooks, Plugins, Analytics; Audit Log page gains a computed summary card; Organization Settings gains a data-export download button. |
 | 0.6.0 | 2026-07-20 | Project detail page grows to 11 registers (Risk, Decision, Issue, Change Request, Requirement, Review, Checklist, Document, Governance Gate, Customer Sign-off, Deployment Approval), reorganized into 3 grouped categories (Planning & Tracking / Governance & Reviews / Documents & Sign-off) to keep the tab bar navigable; new org-level pages (Departments, SOPs, Knowledge Base, Search, Organization Settings); notification bell with unread badge in the sidebar; full "Glass Gradient" visual pass (violet/cyan theme, frosted-glass panels, collapsible icon sidebar). |
 | 0.4.0 | 2026-07-19 | Audit Log viewer (Phase 6 Module 13): `apps/web/src/app/dashboard/audit`, nav item gated to `ADMIN`/`GOVERNANCE_LEAD`/`AUDITOR`, actor names resolved against the org's user list. |
@@ -24,6 +25,7 @@ Semantic Versioning (`MAJOR.MINOR.PATCH`) per deployable app. Bumped by the
 
 | Version | Date | Notes |
 |---|---|---|
+| 0.8.0 | 2026-07-20 | Checklist Templates (org-level, applied to a project via snapshot copy — closes out Checklist Engine), native document upload/download (`StorageProvider` interface + `LocalDiskStorageService`), Email Engine outbox (`EmailLog`, wired as a 4th Deployment Governance notification channel), structured logging (`nestjs-pino`), Prometheus metrics (`/metrics`), and a k6 performance-testing script. |
 | 0.7.0 | 2026-07-20 | Ten more modules, favoring non-AI stand-ins for Phase 7's LLM-flavored ones: Requirement Analyzer (rule-based flags), AI Audit Assistant (computed summary), AI Risk Prediction (heuristic `ProjectHealthService` score), Analytics (org-wide rollup of the above). Plus Webhook Connectors (Slack/Teams, AES-256-GCM-encrypted URLs via a new `EncryptionService`), Plugin Framework (manifest registry), Security Findings (Vulnerability Management register), a live OpenAPI spec (`@nestjs/swagger`), and on-demand Organization data export (Backup & Recovery). |
 | 0.6.0 | 2026-07-20 | Fourteen new modules on top of the audit trail and governance workflow: Risk/Decision/Issue Registers, Change Requests, Requirements, Reviews (Architecture/Security/Performance), Checklist, Departments, SOPs, Documents, Governance Gates, Customer Sign-off, Deployment Approvals (service-layer-enforced block on required gates/sign-offs, per Phase 6 Module 12), Notifications (in-app, system-generated), Knowledge Articles, and cross-register Enterprise Search — all org-scoped, RBAC-gated, and audit-logged following the established CRUD shape; `Review` and `GovernanceGate` each share one entity across multiple vision-doc modules via a type/category discriminator. |
 | 0.5.0 | 2026-07-19 | Governance Workflow (Phase 5 Module 6): `Project.governanceStage` (INITIATION → PLANNING → EXECUTION → MONITORING → CLOSURE), a strictly sequential state machine (`governance-stage.ts`) enforced in `ProjectsService.update`, writes a `GOVERNANCE_STAGE_ADVANCED` audit log entry. |
@@ -37,5 +39,6 @@ Semantic Versioning (`MAJOR.MINOR.PATCH`) per deployable app. Bumped by the
 
 | Version | Date | Notes |
 |---|---|---|
+| 0.2.1 | 2026-07-20 | Darkened `color.warning[500]` (`#c98a05` → `#a66c03`) to fix a WCAG AA contrast failure (`warning` on `warningBg`, 2.54:1 → 3.80:1) found by the new `scripts/contrast-audit.js`; found simultaneously, a `brand`/`bgBase` failure (4.23:1) is deliberately left unfixed since correcting it would change the brand identity itself. |
 | 0.2.0 | 2026-07-14 | Add `containerWidth` scale for centered content containers (auth cards, narrow forms, dialogs). |
 | 0.1.0 | 2026-07-13 | Initial token set: color, spacing, radius, shadow, typography, breakpoints, z-index. |

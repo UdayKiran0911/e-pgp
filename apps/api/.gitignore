@@ -3,3 +3,6 @@ node_modules
 .env
 
 /generated/prisma
+
+# Local-disk StorageProvider target (Document Management, Phase 5 Module 7)
+/uploads

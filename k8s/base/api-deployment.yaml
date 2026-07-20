@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: epg-api
+  namespace: epg-platform
+  labels:
+    app: epg-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: epg-api
+  template:
+    metadata:
+      labels:
+        app: epg-api
+    spec:
+      containers:
+        - name: api
+          # Placeholder — replace with a real registry path
+          # (ghcr.io/<org>/epg-api:<tag>) built from apps/api/Dockerfile.
+          image: epg-platform/api:latest
+          ports:
+            - containerPort: 4000
+          envFrom:
+            - configMapRef:
+                name: epg-config
+            - secretRef:
+                name: epg-secrets
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: epg-config
+                  key: API_PORT
+          # Document uploads (LocalDiskStorageService) land on the pod's
+          # local disk — fine for a single replica, but with replicas: 2
+          # each pod has its own uploads/ directory. A real deployment
+          # needs either a shared volume (ReadWriteMany PVC) or, more
+          # likely, the cloud-storage StorageProvider this was always
+          # meant to be swapped for (see apps/api/src/storage). Not
+          # solved here — flagged so it isn't a silent data-loss surprise.
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

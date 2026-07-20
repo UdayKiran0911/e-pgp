@@ -166,4 +166,45 @@ describe('Documents (integration)', () => {
       });
     expect(response.status).toBe(404);
   });
+
+  it('uploads a real file to local disk and downloads it back byte-for-byte', async () => {
+    const fileContents = Buffer.from('%PDF-1.4 fake pdf contents for a test');
+
+    const uploaded = await request(app.getHttpServer())
+      .post('/documents/upload')
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .field('projectId', orgAProjectId)
+      .field('title', 'Uploaded Runbook')
+      .attach('file', fileContents, 'runbook.pdf');
+
+    expect(uploaded.status).toBe(201);
+    const body = uploaded.body as DocumentBody & { storageKey?: string };
+    expect(body.storageKey).toBeTruthy();
+    expect(body.url).toBe(`/documents/${body.id}/download`);
+
+    const downloaded = await request(app.getHttpServer())
+      .get(body.url)
+      .set('Authorization', `Bearer ${orgAAdminToken}`)
+      .buffer(true)
+      .parse((res, callback) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        res.on('end', () => callback(null, Buffer.concat(chunks)));
+      });
+    expect(downloaded.status).toBe(200);
+    expect(downloaded.headers['content-disposition']).toContain(
+      'Uploaded Runbook',
+    );
+    expect(Buffer.compare(downloaded.body as Buffer, fileContents)).toBe(0);
+  });
+
+  it('rejects a MEMBER uploading a file', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/documents/upload')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .field('projectId', orgAProjectId)
+      .field('title', 'Should fail')
+      .attach('file', Buffer.from('x'), 'x.txt');
+    expect(response.status).toBe(403);
+  });
 });

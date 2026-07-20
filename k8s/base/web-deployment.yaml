@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: epg-web
+  namespace: epg-platform
+  labels:
+    app: epg-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: epg-web
+  template:
+    metadata:
+      labels:
+        app: epg-web
+    spec:
+      containers:
+        - name: web
+          # Placeholder — replace with a real registry path
+          # (ghcr.io/<org>/epg-web:<tag>) built from apps/web/Dockerfile.
+          image: epg-platform/web:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: epg-config
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: epg-config
+                  key: WEB_PORT
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

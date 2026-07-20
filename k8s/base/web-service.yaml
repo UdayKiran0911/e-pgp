@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: epg-web
+  namespace: epg-platform
+spec:
+  selector:
+    app: epg-web
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP

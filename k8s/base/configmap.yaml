@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: epg-config
+  namespace: epg-platform
+data:
+  NODE_ENV: "production"
+  API_PORT: "4000"
+  WEB_PORT: "3000"
+  JWT_EXPIRES_IN: "8h"
+  # The web app's own runtime env, injected at request time by Next.js —
+  # points at the API Service below (in-cluster DNS name).
+  NEXT_PUBLIC_API_URL: "http://epg-api:4000"

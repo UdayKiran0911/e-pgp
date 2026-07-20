@@ -1,6 +1,6 @@
 # Phase 3 — UI / UX Design
 
-**Status:** Not Started
+**Status:** In Progress
 **Deliverables:** Wireframes, High Fidelity Mockups, UI Specification, UX Guidelines, Design Tokens
 
 ## Modules
@@ -49,9 +49,9 @@
 
 ### Module 8: Accessibility
 - [ ] Task 8.1: Define accessibility standards (WCAG 2.1 AA)
-  - [ ] Subtask 8.1.1: Document color contrast, keyboard nav, and ARIA requirements
-    - [ ] Activity: Audit design tokens for WCAG AA contrast compliance
-    - [ ] Activity: Add accessibility checks to the `ui-audit` skill
+  - [ ] Subtask 8.1.1: Document color contrast, keyboard nav, and ARIA requirements — contrast is now audited (below); keyboard nav and ARIA requirements are not yet written up as a standard
+    - [x] Activity: Audit design tokens for WCAG AA contrast compliance — `scripts/contrast-audit.js` (`pnpm contrast-audit`), checks real text-on-background token pairs against 4.5:1/3:1 thresholds. Running it for the first time found and fixed a real failure (`warning` on `warningBg`, 2.54:1 → 3.80:1 after darkening the token); one known failure remains and is deliberately left as-is (`brand` on white, 4.23:1) since fixing it means changing the brand/gradient identity itself, a design call flagged here rather than made silently
+    - [x] Activity: Add accessibility checks to the `ui-audit` skill — Step 5 in `.claude/skills/ui-audit/SKILL.md` now runs `pnpm contrast-audit` whenever a design-token color changes
 
 ## Deliverables Checklist
 - [ ] Wireframes

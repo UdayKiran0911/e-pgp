@@ -331,6 +331,7 @@ export interface Document {
   projectId: string;
   title: string;
   url: string;
+  storageKey: string | null;
   version: string;
   createdAt: string;
   updatedAt: string;
@@ -599,4 +600,43 @@ export interface AnalyticsOverview {
     signoffCompletionRate: number;
   };
   adoption: Record<string, AdoptionCounts>;
+}
+
+export interface ChecklistTemplateItem {
+  id: string;
+  templateId: string;
+  title: string;
+  order: number;
+}
+
+export interface ChecklistTemplate {
+  id: string;
+  organizationId: string;
+  name: string;
+  description: string | null;
+  items: ChecklistTemplateItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateChecklistTemplateInput {
+  name: string;
+  description?: string;
+  items: string[];
+}
+
+export interface UpdateChecklistTemplateInput {
+  name?: string;
+  description?: string;
+  items?: string[];
+}
+
+export interface EmailLog {
+  id: string;
+  organizationId: string;
+  projectId: string | null;
+  recipientEmail: string;
+  subject: string;
+  body: string;
+  createdAt: string;
 }

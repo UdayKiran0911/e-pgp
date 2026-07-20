@@ -5,8 +5,10 @@ import type {
   AuthResponse,
   ChangeRequest,
   ChecklistItem,
+  ChecklistTemplate,
   CreateChangeRequestInput,
   CreateChecklistItemInput,
+  CreateChecklistTemplateInput,
   CreateCustomerSignoffInput,
   CreateDecisionInput,
   CreateDepartmentInput,
@@ -29,6 +31,7 @@ import type {
   Department,
   DeploymentApproval,
   Document,
+  EmailLog,
   GovernanceGate,
   Issue,
   KnowledgeArticle,
@@ -49,6 +52,7 @@ import type {
   Sop,
   UpdateChangeRequestInput,
   UpdateChecklistItemInput,
+  UpdateChecklistTemplateInput,
   UpdateCustomerSignoffInput,
   UpdateDecisionInput,
   UpdateDepartmentInput,
@@ -70,7 +74,7 @@ import type {
   WebhookConnector,
 } from './types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 export class ApiError extends Error {
   constructor(
@@ -595,4 +599,66 @@ export const api = {
 
   exportOrganizationData: (token: string) =>
     request<Record<string, unknown>>('/organizations/me/export', {}, token),
+
+  listChecklistTemplates: (token: string) =>
+    request<ChecklistTemplate[]>('/checklist-templates', {}, token),
+
+  createChecklistTemplate: (token: string, data: CreateChecklistTemplateInput) =>
+    request<ChecklistTemplate>(
+      '/checklist-templates',
+      { method: 'POST', body: JSON.stringify(data) },
+      token,
+    ),
+
+  updateChecklistTemplate: (
+    token: string,
+    id: string,
+    data: UpdateChecklistTemplateInput,
+  ) =>
+    request<ChecklistTemplate>(
+      `/checklist-templates/${id}`,
+      { method: 'PATCH', body: JSON.stringify(data) },
+      token,
+    ),
+
+  applyChecklistTemplate: (token: string, id: string, projectId: string) =>
+    request<ChecklistItem[]>(
+      `/checklist-templates/${id}/apply`,
+      { method: 'POST', body: JSON.stringify({ projectId }) },
+      token,
+    ),
+
+  uploadDocument: async (
+    token: string,
+    data: { projectId: string; title: string; version?: string; file: File },
+  ): Promise<Document> => {
+    const form = new FormData();
+    form.append('projectId', data.projectId);
+    form.append('title', data.title);
+    if (data.version) form.append('version', data.version);
+    form.append('file', data.file);
+
+    const response = await fetch(`${API_URL}/documents/upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    });
+    if (!response.ok) {
+      const body: { message?: string | string[] } = await response
+        .json()
+        .catch(() => ({}));
+      const message = Array.isArray(body.message)
+        ? body.message.join(', ')
+        : (body.message ?? response.statusText);
+      throw new ApiError(response.status, message);
+    }
+    return (await response.json()) as Document;
+  },
+
+  listEmailLogs: (token: string, projectId?: string) =>
+    request<EmailLog[]>(
+      projectId ? `/email-logs?projectId=${projectId}` : '/email-logs',
+      {},
+      token,
+    ),
 };

@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { WebhookConnectorsService } from '../webhook-connectors/webhook-connectors.service';
+import { EmailService } from '../email/email.service';
 import { DeploymentStatus } from '../../generated/prisma/client';
 
 interface NotifyCallArgs {
@@ -26,10 +27,12 @@ describe('DeploymentApprovalsService', () => {
     };
     governanceGate: { count: jest.Mock };
     customerSignoff: { count: jest.Mock };
+    user: { findUnique: jest.Mock };
   };
   let auditLog: { record: jest.Mock };
   let notifications: { notify: jest.Mock<unknown, [NotifyCallArgs]> };
   let webhooks: { notify: jest.Mock<unknown, [string, string]> };
+  let email: { send: jest.Mock };
 
   const orgId = 'org-1';
   const actorId = 'user-1';
@@ -58,15 +61,22 @@ describe('DeploymentApprovalsService', () => {
       },
       governanceGate: { count: jest.fn() },
       customerSignoff: { count: jest.fn() },
+      user: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ email: 'requester@acme.test' }),
+      },
     };
     auditLog = { record: jest.fn() };
     notifications = { notify: jest.fn<unknown, [NotifyCallArgs]>() };
     webhooks = { notify: jest.fn<unknown, [string, string]>() };
+    email = { send: jest.fn() };
     service = new DeploymentApprovalsService(
       prisma as unknown as PrismaService,
       auditLog as unknown as AuditLogService,
       notifications as unknown as NotificationsService,
       webhooks as unknown as WebhookConnectorsService,
+      email as unknown as EmailService,
     );
   });
 
@@ -157,6 +167,12 @@ describe('DeploymentApprovalsService', () => {
       orgId,
       expect.stringContaining('approved'),
     );
+    expect(email.send).toHaveBeenCalledWith(
+      expect.objectContaining({ recipientEmail: 'requester@acme.test' }),
+    );
+    const emailCalls = email.send.mock.calls as unknown[][];
+    const emailArgs = emailCalls[0][0] as { subject: string };
+    expect(emailArgs.subject).toContain('approved');
   });
 
   it('blocking a request does not require governance checks and still notifies the requester', async () => {
@@ -184,5 +200,28 @@ describe('DeploymentApprovalsService', () => {
       orgId,
       expect.stringContaining('blocked'),
     );
+    expect(email.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recipientEmail: 'requester@acme.test',
+        body: 'Coverage gate still unmet',
+      }),
+    );
+  });
+
+  it('skips the email entirely if the requester user no longer exists', async () => {
+    prisma.deploymentApproval.findFirst.mockResolvedValue(approval);
+    prisma.governanceGate.count.mockResolvedValue(0);
+    prisma.customerSignoff.count.mockResolvedValue(0);
+    prisma.deploymentApproval.update.mockResolvedValue({
+      ...approval,
+      status: DeploymentStatus.APPROVED,
+    });
+    prisma.user.findUnique.mockResolvedValue(null);
+
+    await service.update(approval.id, orgId, actorId, {
+      status: DeploymentStatus.APPROVED,
+    });
+
+    expect(email.send).not.toHaveBeenCalled();
   });
 });

@@ -17,10 +17,11 @@ import {
   Tabs,
   Tag,
   Typography,
+  Upload,
 } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { useAuth } from '@/lib/auth-context';
-import { api, ApiError } from '@/lib/api-client';
+import { api, ApiError, API_URL } from '@/lib/api-client';
 import { spacing, semanticColor } from '@epg/design-tokens';
 import { glassPanelStyle } from '@/lib/ui-style';
 import type {
@@ -65,6 +66,7 @@ import type {
   SecurityFinding,
   SecurityFindingSeverity,
   SecurityFindingStatus,
+  ChecklistTemplate,
   SignoffStatus,
 } from '@/lib/types';
 
@@ -411,6 +413,12 @@ export default function ProjectDetailPage() {
   const [creatingDeployment, setCreatingDeployment] = useState(false);
   const [createFindingOpen, setCreateFindingOpen] = useState(false);
   const [creatingFinding, setCreatingFinding] = useState(false);
+  const [uploadDocumentOpen, setUploadDocumentOpen] = useState(false);
+  const [uploadingDocument, setUploadingDocument] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [checklistTemplates, setChecklistTemplates] = useState<ChecklistTemplate[]>([]);
+  const [applyTemplateOpen, setApplyTemplateOpen] = useState(false);
+  const [applyingTemplate, setApplyingTemplate] = useState(false);
 
   const canManage = user?.role === 'ADMIN' || user?.role === 'GOVERNANCE_LEAD';
   const activeCategory = REGISTER_CATEGORY[activeRegister];
@@ -467,6 +475,17 @@ export default function ProjectDetailPage() {
       cancelled = true;
     };
   }, [token, projectId]);
+
+  useEffect(() => {
+    if (!token) return;
+    api
+      .listChecklistTemplates(token)
+      .then(setChecklistTemplates)
+      .catch(() => {
+        // Non-critical background fetch — only used to populate the
+        // "Apply Template" dropdown, a failure here shouldn't block the page.
+      });
+  }, [token]);
 
   const reload = async () => {
     if (!token) return;
@@ -879,6 +898,49 @@ export default function ProjectDetailPage() {
       void message.error(
         err instanceof ApiError ? err.message : 'Failed to update the finding.',
       );
+    }
+  };
+
+  const handleUploadDocument = async (values: { title: string; version?: string }) => {
+    if (!token || !uploadFile) {
+      void message.error('Choose a file first.');
+      return;
+    }
+    setUploadingDocument(true);
+    try {
+      await api.uploadDocument(token, {
+        projectId,
+        title: values.title,
+        version: values.version,
+        file: uploadFile,
+      });
+      void message.success('File uploaded.');
+      setUploadDocumentOpen(false);
+      setUploadFile(null);
+      await reload();
+    } catch (err) {
+      void message.error(
+        err instanceof ApiError ? err.message : 'Failed to upload the file.',
+      );
+    } finally {
+      setUploadingDocument(false);
+    }
+  };
+
+  const handleApplyTemplate = async (values: { templateId: string }) => {
+    if (!token) return;
+    setApplyingTemplate(true);
+    try {
+      await api.applyChecklistTemplate(token, values.templateId, projectId);
+      void message.success('Template applied.');
+      setApplyTemplateOpen(false);
+      await reload();
+    } catch (err) {
+      void message.error(
+        err instanceof ApiError ? err.message : 'Failed to apply the template.',
+      );
+    } finally {
+      setApplyingTemplate(false);
     }
   };
 
@@ -1327,11 +1389,19 @@ export default function ProjectDetailPage() {
             {
               title: 'Title',
               dataIndex: 'title',
-              render: (title: string, record) => (
-                <a href={record.url} target="_blank" rel="noreferrer">
-                  {title}
-                </a>
-              ),
+              render: (title: string, record) => {
+                // Uploaded files have a storage-relative url
+                // (/documents/:id/download) that only resolves against
+                // the API's own origin, not the web app's.
+                const href = record.storageKey
+                  ? `${API_URL}${record.url}`
+                  : record.url;
+                return (
+                  <a href={href} target="_blank" rel="noreferrer">
+                    {title}
+                  </a>
+                );
+              },
             },
             { title: 'Version', dataIndex: 'version' },
           ]}
@@ -1405,15 +1475,32 @@ export default function ProjectDetailPage() {
             setActiveRegister(CATEGORY_REGISTERS[key as CategoryKey][0])
           }
           tabBarExtraContent={
-            // Change Requests, Reviews, and Deployment Approvals are
-            // self-serve (anyone can submit; the RBAC gate is on the
-            // decision, not the submission) — every other register is
-            // write-gated.
-            (canManage || SELF_SERVE_REGISTERS.includes(activeRegister)) && (
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleAddClick}>
-                {REGISTER_ADD_LABEL[activeRegister]}
-              </Button>
-            )
+            <Space>
+              {canManage && activeRegister === 'checklist' && (
+                <Button onClick={() => setApplyTemplateOpen(true)}>
+                  Apply Template
+                </Button>
+              )}
+              {canManage && activeRegister === 'documents' && (
+                <Button
+                  icon={<UploadOutlined />}
+                  onClick={() => setUploadDocumentOpen(true)}
+                >
+                  Upload File
+                </Button>
+              )}
+              {
+                // Change Requests, Reviews, and Deployment Approvals are
+                // self-serve (anyone can submit; the RBAC gate is on the
+                // decision, not the submission) — every other register is
+                // write-gated.
+                (canManage || SELF_SERVE_REGISTERS.includes(activeRegister)) && (
+                  <Button type="primary" icon={<PlusOutlined />} onClick={handleAddClick}>
+                    {REGISTER_ADD_LABEL[activeRegister]}
+                  </Button>
+                )
+              }
+            </Space>
           }
           items={(Object.keys(CATEGORY_REGISTERS) as CategoryKey[]).map((category) => ({
             key: category,
@@ -1786,6 +1873,74 @@ export default function ProjectDetailPage() {
           </Form.Item>
           <Button type="primary" htmlType="submit" loading={creatingFinding} block>
             Log finding
+          </Button>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Upload a document"
+        open={uploadDocumentOpen}
+        onCancel={() => {
+          setUploadDocumentOpen(false);
+          setUploadFile(null);
+        }}
+        footer={null}
+        destroyOnHidden
+      >
+        <Form<{ title: string; version?: string }>
+          layout="vertical"
+          onFinish={(values) => void handleUploadDocument(values)}
+        >
+          <Form.Item name="title" label="Title" rules={[{ required: true, min: 2 }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="version" label="Version" initialValue="1.0">
+            <Input />
+          </Form.Item>
+          <Form.Item label="File" required>
+            <Upload
+              maxCount={1}
+              beforeUpload={(file) => {
+                setUploadFile(file);
+                return false;
+              }}
+              onRemove={() => setUploadFile(null)}
+            >
+              <Button icon={<UploadOutlined />}>Choose file</Button>
+            </Upload>
+          </Form.Item>
+          <Button type="primary" htmlType="submit" loading={uploadingDocument} block>
+            Upload
+          </Button>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Apply a checklist template"
+        open={applyTemplateOpen}
+        onCancel={() => setApplyTemplateOpen(false)}
+        footer={null}
+        destroyOnHidden
+      >
+        <Form<{ templateId: string }>
+          layout="vertical"
+          onFinish={(values) => void handleApplyTemplate(values)}
+        >
+          <Form.Item
+            name="templateId"
+            label="Template"
+            rules={[{ required: true }]}
+          >
+            <Select
+              placeholder="Choose a template"
+              options={checklistTemplates.map((t) => ({
+                value: t.id,
+                label: `${t.name} (${t.items.length} item${t.items.length === 1 ? '' : 's'})`,
+              }))}
+            />
+          </Form.Item>
+          <Button type="primary" htmlType="submit" loading={applyingTemplate} block>
+            Apply Template
           </Button>
         </Form>
       </Modal>

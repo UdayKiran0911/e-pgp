@@ -104,6 +104,9 @@ describe('Deployment Approvals (integration)', () => {
     await prisma.customerSignoff.deleteMany({
       where: { organizationId: { in: orgIds } },
     });
+    await prisma.emailLog.deleteMany({
+      where: { organizationId: { in: orgIds } },
+    });
     await prisma.project.deleteMany({
       where: { organizationId: { in: orgIds } },
     });
@@ -191,6 +194,13 @@ describe('Deployment Approvals (integration)', () => {
         (n) => n.recipientId === memberUserId && n.title.includes('approved'),
       ),
     ).toBe(true);
+
+    const emailLog = await prisma.emailLog.findFirst({
+      where: { recipientEmail: memberEmail, projectId: orgAProjectId },
+      orderBy: { createdAt: 'desc' },
+    });
+    expect(emailLog).not.toBeNull();
+    expect(emailLog?.subject).toContain('approved');
   });
 
   it('rejects requesting a deployment approval against a project from a different organization', async () => {
