@@ -470,3 +470,133 @@ export interface SearchResult {
   projectId: string | null;
   snippet: string | null;
 }
+
+export type WebhookProvider = 'SLACK' | 'TEAMS';
+
+export interface WebhookConnector {
+  id: string;
+  organizationId: string;
+  name: string;
+  provider: WebhookProvider;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateWebhookConnectorInput {
+  name: string;
+  provider: WebhookProvider;
+  url: string;
+}
+
+export interface UpdateWebhookConnectorInput {
+  name?: string;
+  url?: string;
+  isActive?: boolean;
+}
+
+export interface PluginManifest {
+  id: string;
+  organizationId: string;
+  name: string;
+  version: string;
+  description: string | null;
+  manifest: Record<string, unknown>;
+  isEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePluginManifestInput {
+  name: string;
+  version: string;
+  description?: string;
+  manifest: Record<string, unknown>;
+}
+
+export interface UpdatePluginManifestInput {
+  name?: string;
+  version?: string;
+  description?: string;
+  manifest?: Record<string, unknown>;
+  isEnabled?: boolean;
+}
+
+export type SecurityFindingSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type SecurityFindingStatus =
+  | 'OPEN'
+  | 'IN_REMEDIATION'
+  | 'RESOLVED'
+  | 'ACCEPTED_RISK';
+
+export interface SecurityFinding {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  title: string;
+  description: string | null;
+  severity: SecurityFindingSeverity;
+  status: SecurityFindingStatus;
+  discoveredAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSecurityFindingInput {
+  projectId: string;
+  title: string;
+  description?: string;
+  severity: SecurityFindingSeverity;
+}
+
+export interface UpdateSecurityFindingInput {
+  title?: string;
+  description?: string;
+  severity?: SecurityFindingSeverity;
+  status?: SecurityFindingStatus;
+}
+
+export interface RequirementAnalysis {
+  requirementId: string;
+  title: string;
+  flags: string[];
+}
+
+export type ProjectHealthBand = 'HEALTHY' | 'AT_RISK' | 'CRITICAL';
+
+export interface ProjectHealthScore {
+  projectId: string;
+  score: number;
+  band: ProjectHealthBand;
+  signals: {
+    openHighCriticalRisks: number;
+    unresolvedHighCriticalIssues: number;
+    unmetGovernanceGates: number;
+    pendingCustomerSignoffs: number;
+    blockedDeployments: number;
+  };
+}
+
+export interface AuditSummary {
+  totalActions: number;
+  byAction: Record<string, number>;
+}
+
+export interface AdoptionCounts {
+  total: number;
+  last30Days: number;
+}
+
+export interface AnalyticsOverview {
+  governanceHealth: {
+    averageScore: number;
+    healthy: number;
+    atRisk: number;
+    critical: number;
+  };
+  auditReadiness: {
+    gateCompletionRate: number;
+    signoffCompletionRate: number;
+  };
+  adoption: Record<string, AdoptionCounts>;
+}

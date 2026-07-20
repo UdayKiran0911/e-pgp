@@ -38,6 +38,7 @@ import type {
   CreateRequirementInput,
   CreateReviewInput,
   CreateRiskInput,
+  CreateSecurityFindingInput,
   CustomerSignoff,
   Decision,
   DeploymentApproval,
@@ -49,8 +50,10 @@ import type {
   IssuePriority,
   IssueStatus,
   Project,
+  ProjectHealthScore,
   ProjectStatus,
   Requirement,
+  RequirementAnalysis,
   RequirementStatus,
   Review,
   ReviewStatus,
@@ -59,6 +62,9 @@ import type {
   RiskLikelihood,
   RiskSeverity,
   RiskStatus,
+  SecurityFinding,
+  SecurityFindingSeverity,
+  SecurityFindingStatus,
   SignoffStatus,
 } from '@/lib/types';
 
@@ -193,6 +199,40 @@ const DEPLOYMENT_ALLOWED_TRANSITIONS: Record<DeploymentStatus, DeploymentStatus[
   APPROVED: [],
 };
 
+const FINDING_SEVERITY_COLOR: Record<SecurityFindingSeverity, string> = {
+  LOW: semanticColor.success,
+  MEDIUM: semanticColor.warning,
+  HIGH: semanticColor.danger,
+  CRITICAL: semanticColor.danger,
+};
+
+const FINDING_STATUS_COLOR: Record<SecurityFindingStatus, string> = {
+  OPEN: semanticColor.danger,
+  IN_REMEDIATION: semanticColor.warning,
+  RESOLVED: semanticColor.brand,
+  ACCEPTED_RISK: semanticColor.textDisabled,
+};
+
+const FINDING_STATUSES: SecurityFindingStatus[] = [
+  'OPEN',
+  'IN_REMEDIATION',
+  'RESOLVED',
+  'ACCEPTED_RISK',
+];
+
+const HEALTH_BAND_COLOR: Record<string, string> = {
+  HEALTHY: semanticColor.success,
+  AT_RISK: semanticColor.warning,
+  CRITICAL: semanticColor.danger,
+};
+
+const REQUIREMENT_FLAG_LABEL: Record<string, string> = {
+  MISSING_DESCRIPTION: 'Missing description',
+  TITLE_TOO_SHORT: 'Title too short',
+  DUPLICATE_TITLE: 'Duplicate title',
+  STALE_DRAFT: 'Stale draft',
+};
+
 // Registers shown as tabs on a project's detail page. Each new register
 // module should add one entry here rather than a new stacked <Card> —
 // keeps the page a fixed height instead of growing forever as more
@@ -204,6 +244,7 @@ type RegisterKey =
   | 'decisions'
   | 'issues'
   | 'checklist'
+  | 'securityFindings'
   | 'requirements'
   | 'reviews'
   | 'changeRequests'
@@ -221,7 +262,7 @@ const CATEGORY_LABEL: Record<CategoryKey, string> = {
 };
 
 const CATEGORY_REGISTERS: Record<CategoryKey, RegisterKey[]> = {
-  planning: ['risks', 'decisions', 'issues', 'checklist'],
+  planning: ['risks', 'decisions', 'issues', 'checklist', 'securityFindings'],
   governance: [
     'requirements',
     'reviews',
@@ -237,6 +278,7 @@ const REGISTER_CATEGORY: Record<RegisterKey, CategoryKey> = {
   decisions: 'planning',
   issues: 'planning',
   checklist: 'planning',
+  securityFindings: 'planning',
   requirements: 'governance',
   reviews: 'governance',
   changeRequests: 'governance',
@@ -258,6 +300,7 @@ const REGISTER_ADD_LABEL: Record<RegisterKey, string> = {
   governanceGates: 'Add gate',
   deploymentApprovals: 'Request deployment approval',
   customerSignoffs: 'Request sign-off',
+  securityFindings: 'Log finding',
 };
 
 // Registers anyone can submit to — the RBAC gate is on the decision, not
@@ -282,6 +325,9 @@ async function fetchProjectData(token: string, projectId: string) {
     governanceGates,
     customerSignoffs,
     deploymentApprovals,
+    securityFindings,
+    requirementAnalysis,
+    healthScore,
   ] = await Promise.all([
     api.getProject(token, projectId),
     api.listRisks(token, projectId),
@@ -295,6 +341,9 @@ async function fetchProjectData(token: string, projectId: string) {
     api.listGovernanceGates(token, projectId),
     api.listCustomerSignoffs(token, projectId),
     api.listDeploymentApprovals(token, projectId),
+    api.listSecurityFindings(token, projectId),
+    api.analyzeRequirements(token, projectId),
+    api.getProjectHealthScore(token, projectId),
   ]);
   return {
     project,
@@ -309,6 +358,9 @@ async function fetchProjectData(token: string, projectId: string) {
     governanceGates,
     customerSignoffs,
     deploymentApprovals,
+    securityFindings,
+    requirementAnalysis,
+    healthScore,
   };
 }
 
@@ -329,6 +381,9 @@ export default function ProjectDetailPage() {
   const [governanceGates, setGovernanceGates] = useState<GovernanceGate[]>([]);
   const [customerSignoffs, setCustomerSignoffs] = useState<CustomerSignoff[]>([]);
   const [deploymentApprovals, setDeploymentApprovals] = useState<DeploymentApproval[]>([]);
+  const [securityFindings, setSecurityFindings] = useState<SecurityFinding[]>([]);
+  const [requirementAnalysis, setRequirementAnalysis] = useState<RequirementAnalysis[]>([]);
+  const [healthScore, setHealthScore] = useState<ProjectHealthScore | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeRegister, setActiveRegister] = useState<RegisterKey>('risks');
@@ -354,6 +409,8 @@ export default function ProjectDetailPage() {
   const [creatingSignoff, setCreatingSignoff] = useState(false);
   const [createDeploymentOpen, setCreateDeploymentOpen] = useState(false);
   const [creatingDeployment, setCreatingDeployment] = useState(false);
+  const [createFindingOpen, setCreateFindingOpen] = useState(false);
+  const [creatingFinding, setCreatingFinding] = useState(false);
 
   const canManage = user?.role === 'ADMIN' || user?.role === 'GOVERNANCE_LEAD';
   const activeCategory = REGISTER_CATEGORY[activeRegister];
@@ -376,6 +433,9 @@ export default function ProjectDetailPage() {
           governanceGates: gateList,
           customerSignoffs: signoffList,
           deploymentApprovals: deploymentList,
+          securityFindings: findingList,
+          requirementAnalysis: analysisList,
+          healthScore: health,
         }) => {
           if (cancelled) return;
           setProject(proj);
@@ -390,6 +450,9 @@ export default function ProjectDetailPage() {
           setGovernanceGates(gateList);
           setCustomerSignoffs(signoffList);
           setDeploymentApprovals(deploymentList);
+          setSecurityFindings(findingList);
+          setRequirementAnalysis(analysisList);
+          setHealthScore(health);
           setError(null);
         },
       )
@@ -420,6 +483,9 @@ export default function ProjectDetailPage() {
       governanceGates: gateList,
       customerSignoffs: signoffList,
       deploymentApprovals: deploymentList,
+      securityFindings: findingList,
+      requirementAnalysis: analysisList,
+      healthScore: health,
     } = await fetchProjectData(token, projectId);
     setProject(proj);
     setRisks(riskList);
@@ -433,6 +499,9 @@ export default function ProjectDetailPage() {
     setGovernanceGates(gateList);
     setCustomerSignoffs(signoffList);
     setDeploymentApprovals(deploymentList);
+    setSecurityFindings(findingList);
+    setRequirementAnalysis(analysisList);
+    setHealthScore(health);
   };
 
   const handleCreateRisk = async (values: Omit<CreateRiskInput, 'projectId'>) => {
@@ -778,6 +847,41 @@ export default function ProjectDetailPage() {
     }
   };
 
+  const handleCreateFinding = async (
+    values: Omit<CreateSecurityFindingInput, 'projectId'>,
+  ) => {
+    if (!token) return;
+    setCreatingFinding(true);
+    try {
+      await api.createSecurityFinding(token, { ...values, projectId });
+      void message.success('Finding logged.');
+      setCreateFindingOpen(false);
+      await reload();
+    } catch (err) {
+      void message.error(
+        err instanceof ApiError ? err.message : 'Failed to log the finding.',
+      );
+    } finally {
+      setCreatingFinding(false);
+    }
+  };
+
+  const handleFindingStatusChange = async (
+    findingId: string,
+    status: SecurityFindingStatus,
+  ) => {
+    if (!token) return;
+    try {
+      await api.updateSecurityFinding(token, findingId, { status });
+      void message.success('Finding status updated.');
+      await reload();
+    } catch (err) {
+      void message.error(
+        err instanceof ApiError ? err.message : 'Failed to update the finding.',
+      );
+    }
+  };
+
   const handleAddClick = () => {
     if (activeRegister === 'risks') setCreateRiskOpen(true);
     else if (activeRegister === 'decisions') setLogDecisionOpen(true);
@@ -789,6 +893,7 @@ export default function ProjectDetailPage() {
     else if (activeRegister === 'documents') setCreateDocumentOpen(true);
     else if (activeRegister === 'governanceGates') setCreateGateOpen(true);
     else if (activeRegister === 'deploymentApprovals') setCreateDeploymentOpen(true);
+    else if (activeRegister === 'securityFindings') setCreateFindingOpen(true);
     else setCreateSignoffOpen(true);
   };
 
@@ -946,6 +1051,49 @@ export default function ProjectDetailPage() {
         />
       ),
     },
+    securityFindings: {
+      key: 'securityFindings',
+      label: 'Security Findings',
+      children: (
+        <Table<SecurityFinding>
+          rowKey="id"
+          loading={loading}
+          dataSource={securityFindings}
+          pagination={false}
+          columns={[
+            { title: 'Title', dataIndex: 'title' },
+            {
+              title: 'Severity',
+              dataIndex: 'severity',
+              render: (severity: SecurityFindingSeverity) => (
+                <Tag color={FINDING_SEVERITY_COLOR[severity]}>{severity}</Tag>
+              ),
+            },
+            {
+              title: 'Status',
+              dataIndex: 'status',
+              render: (status: SecurityFindingStatus, record) =>
+                canManage ? (
+                  <Select<SecurityFindingStatus>
+                    value={status}
+                    size="small"
+                    style={{ minWidth: 160 }}
+                    options={FINDING_STATUSES.map((value) => ({
+                      value,
+                      label: value,
+                    }))}
+                    onChange={(value) =>
+                      void handleFindingStatusChange(record.id, value)
+                    }
+                  />
+                ) : (
+                  <Tag color={FINDING_STATUS_COLOR[status]}>{status}</Tag>
+                ),
+            },
+          ]}
+        />
+      ),
+    },
     requirements: {
       key: 'requirements',
       label: 'Requirements',
@@ -977,6 +1125,26 @@ export default function ProjectDetailPage() {
                 ) : (
                   <Tag color={REQUIREMENT_STATUS_COLOR[status]}>{status}</Tag>
                 ),
+            },
+            {
+              title: 'Flags',
+              key: 'flags',
+              render: (_: unknown, record) => {
+                const flags =
+                  requirementAnalysis.find((a) => a.requirementId === record.id)
+                    ?.flags ?? [];
+                return flags.length === 0 ? (
+                  <Text type="secondary">—</Text>
+                ) : (
+                  <>
+                    {flags.map((flag) => (
+                      <Tag key={flag} color={semanticColor.warning}>
+                        {REQUIREMENT_FLAG_LABEL[flag] ?? flag}
+                      </Tag>
+                    ))}
+                  </>
+                );
+              },
             },
           ]}
         />
@@ -1222,6 +1390,11 @@ export default function ProjectDetailPage() {
               <Text strong>{project.name}</Text>
               <Tag color={PROJECT_STATUS_COLOR[project.status]}>{project.status}</Tag>
               <Tag color={semanticColor.brand}>{project.governanceStage}</Tag>
+              {healthScore && (
+                <Tag color={HEALTH_BAND_COLOR[healthScore.band]}>
+                  Health: {healthScore.score} ({healthScore.band})
+                </Tag>
+              )}
             </Space>
           )
         }
@@ -1580,6 +1753,39 @@ export default function ProjectDetailPage() {
           </Form.Item>
           <Button type="primary" htmlType="submit" loading={creatingDeployment} block>
             Request deployment approval
+          </Button>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Log a security finding"
+        open={createFindingOpen}
+        onCancel={() => setCreateFindingOpen(false)}
+        footer={null}
+        destroyOnHidden
+      >
+        <Form<Omit<CreateSecurityFindingInput, 'projectId'>>
+          layout="vertical"
+          onFinish={(values) => void handleCreateFinding(values)}
+        >
+          <Form.Item name="title" label="Title" rules={[{ required: true, min: 2 }]}>
+            <Input placeholder="e.g. Outdated TLS cipher suite" />
+          </Form.Item>
+          <Form.Item name="description" label="Description">
+            <Input.TextArea rows={3} />
+          </Form.Item>
+          <Form.Item name="severity" label="Severity" rules={[{ required: true }]}>
+            <Select
+              options={[
+                { value: 'LOW', label: 'LOW' },
+                { value: 'MEDIUM', label: 'MEDIUM' },
+                { value: 'HIGH', label: 'HIGH' },
+                { value: 'CRITICAL', label: 'CRITICAL' },
+              ]}
+            />
+          </Form.Item>
+          <Button type="primary" htmlType="submit" loading={creatingFinding} block>
+            Log finding
           </Button>
         </Form>
       </Modal>

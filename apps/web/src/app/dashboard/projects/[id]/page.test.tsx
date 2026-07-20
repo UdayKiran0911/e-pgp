@@ -168,6 +168,39 @@ vi.mock("@/lib/api-client", async () => {
           updatedAt: "2026-01-01T00:00:00.000Z",
         },
       ]),
+      listSecurityFindings: vi.fn().mockResolvedValue([
+        {
+          id: "finding1",
+          organizationId: "org-1",
+          projectId: "p1",
+          title: "Outdated TLS cipher suite",
+          description: null,
+          severity: "HIGH",
+          status: "OPEN",
+          discoveredAt: "2026-01-01T00:00:00.000Z",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+      ]),
+      analyzeRequirements: vi.fn().mockResolvedValue([
+        {
+          requirementId: "req1",
+          title: "Support SSO login",
+          flags: ["MISSING_DESCRIPTION"],
+        },
+      ]),
+      getProjectHealthScore: vi.fn().mockResolvedValue({
+        projectId: "p1",
+        score: 92,
+        band: "HEALTHY",
+        signals: {
+          openHighCriticalRisks: 0,
+          unresolvedHighCriticalIssues: 0,
+          unmetGovernanceGates: 0,
+          pendingCustomerSignoffs: 0,
+          blockedDeployments: 0,
+        },
+      }),
     },
   };
 });
@@ -222,6 +255,9 @@ describe("ProjectDetailPage", () => {
       user: { role: "MEMBER" },
       token: "token-123",
     });
+    // Exercises many sequential tab switches across categories; the
+    // default 5s timeout is too tight when run alongside the rest of the
+    // suite under load.
     renderPage();
 
     await waitFor(() => {
@@ -264,7 +300,7 @@ describe("ProjectDetailPage", () => {
     expect(
       screen.getByRole("button", { name: /Request deployment approval/ })
     ).toBeInTheDocument();
-  });
+  }, 15000);
 
   it("shows the checklist item with a toggleable checkbox", async () => {
     const user = userEvent.setup();
@@ -304,7 +340,7 @@ describe("ProjectDetailPage", () => {
     await user.click(screen.getByRole("tab", { name: "Governance & Reviews" }));
     await user.click(screen.getByRole("tab", { name: "Governance Gates" }));
     expect(await screen.findByText("Code review completed")).toBeInTheDocument();
-  });
+  }, 15000);
 
   it("calls the API with the project id when fetching risks", async () => {
     mockUseAuth.mockReturnValue({
@@ -316,5 +352,35 @@ describe("ProjectDetailPage", () => {
     await waitFor(() => {
       expect(api.listRisks).toHaveBeenCalledWith("token-123", "p1");
     });
+  });
+
+  it("shows the project health score badge in the header", async () => {
+    mockUseAuth.mockReturnValue({
+      user: { role: "ADMIN" },
+      token: "token-123",
+    });
+    renderPage();
+
+    expect(await screen.findByText("Health: 92 (HEALTHY)")).toBeInTheDocument();
+  });
+
+  it("shows the Security Findings tab and flags a requirement missing a description", async () => {
+    const user = userEvent.setup();
+    mockUseAuth.mockReturnValue({
+      user: { role: "ADMIN" },
+      token: "token-123",
+    });
+    renderPage();
+    await screen.findByText("Vendor lock-in");
+
+    await user.click(screen.getByRole("tab", { name: "Security Findings" }));
+    expect(
+      await screen.findByText("Outdated TLS cipher suite"),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Governance & Reviews" }));
+    await user.click(screen.getByRole("tab", { name: "Requirements" }));
+    await screen.findByText("Support SSO login");
+    expect(screen.getByText("Missing description")).toBeInTheDocument();
   });
 });

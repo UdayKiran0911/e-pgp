@@ -34,6 +34,10 @@ vi.mock("@/lib/api-client", async () => {
           updatedAt: "2026-01-01T00:00:00.000Z",
         },
       ]),
+      getAuditSummary: vi.fn().mockResolvedValue({
+        totalActions: 1,
+        byAction: { PROJECT_CREATED: 1 },
+      }),
     },
   };
 });
@@ -54,5 +58,6 @@ describe("AuditLogPage", () => {
     expect(await screen.findByText("PROJECT_CREATED")).toBeInTheDocument();
     expect(screen.getByText("Ada Admin (admin@acme.test)")).toBeInTheDocument();
     expect(screen.getByText("Website Revamp")).toBeInTheDocument();
+    expect(screen.getByText("Total governed actions")).toBeInTheDocument();
   });
 });

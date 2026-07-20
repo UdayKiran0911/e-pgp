@@ -30,4 +30,13 @@ export class OrganizationsController {
       dto,
     );
   }
+
+  @Get('me/export')
+  @Roles(Role.ADMIN)
+  exportMine(@CurrentUser() user: AuthenticatedUser) {
+    return this.organizationsService.exportData(
+      user.organizationId,
+      user.userId,
+    );
+  }
 }

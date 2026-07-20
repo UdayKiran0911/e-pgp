@@ -34,6 +34,15 @@ export class RequirementsController {
     );
   }
 
+  // Declared before ':id' so 'analysis' isn't swallowed as a param.
+  @Get('analysis')
+  analyze(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('projectId') projectId: string,
+  ) {
+    return this.requirementsService.analyze(user.organizationId, projectId);
+  }
+
   @Get(':id')
   findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.requirementsService.findOneInOrganization(

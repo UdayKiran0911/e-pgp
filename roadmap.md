@@ -115,3 +115,44 @@ a flagged future cleanup, not done here). Sample data was seeded for all
 written inline for every new module but, per the standing testing-cadence
 rule, a full verification pass has not been run this session either —
 still deferred to the next session.
+
+A fifth batch added 10 more modules, deliberately choosing non-AI
+stand-ins over the vision doc's LLM-backed versions for Phase 7's
+AI-flavored modules (a real Claude API integration is a separate decision
+not made this batch — see AI Copilot and Meeting Summarization, left
+entirely unbuilt rather than given a hollow non-AI substitute).
+Requirement Analyzer (Module 2) is rule-based gap detection
+(`RequirementsService.analyze()`) surfaced as a "Flags" column on the
+Requirements tab; AI Audit Assistant (Module 3) is a computed audit-log
+summary (`AuditLogService.summarize()`) on the Audit Log page; AI Risk
+Prediction (Module 4) is a heuristic 0-100 health score
+(`ProjectHealthService`) from signals already tracked elsewhere (open
+high/critical risks, unresolved high/critical issues, unmet governance
+gates, pending sign-offs, blocked deployments), shown as a badge in the
+project detail header; Analytics (Module 8) rolls all of that up
+org-wide (governance health, audit readiness, adoption) at
+`/dashboard/analytics`. Phase 8 gained real Slack/Teams webhook
+connectors (Module 4 — the org pastes an incoming-webhook URL, no OAuth
+needed on our side; the URL is AES-256-GCM-encrypted at rest via a new
+`EncryptionService`, Phase 9 Module 5, and wired as the first real
+producer into Deployment Governance decisions alongside the in-app
+Notification), a live OpenAPI spec via `@nestjs/swagger` (Module 9 —
+`/api-docs` / `/api-docs-json`, also closing out Phase 4's OpenAPI
+Specification deliverable; a generated typed `@epg/sdk` package itself is
+still deferred, needs a codegen-pipeline decision), and a Plugin
+Framework manifest registry (Module 10 — metadata storage and enable/
+disable only, no execution sandbox). Phase 9 (Security & Compliance)
+moved from Not Started to In Progress on the strength of three
+partial modules: Encryption (Module 5, the `EncryptionService` above —
+infra-level Postgres/TLS encryption is separate and still unbuilt),
+Backup & Recovery (Module 7, an on-demand `ADMIN`-only JSON export of
+the org's full data via `OrganizationsService.exportData()` — scheduled/
+automated backups are separate and still unbuilt), and Vulnerability
+Management (Module 9, a `SecurityFinding` register with the same
+severity/status shape as Risk/Issue, as an 11th tab on the — sorry, 12th
+now — project detail page grouped into Planning & Tracking; automated
+CI dependency/container scanning is separate and still unbuilt). Sample
+data seeded for every new register against the same real org/projects.
+Full verification remains deferred to the next session per the standing
+cadence rule, though the pre-push hook (lint/typecheck/unit tests) will
+still run and block the eventual push regardless.

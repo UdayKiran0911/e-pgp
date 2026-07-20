@@ -31,10 +31,10 @@
     - [ ] Activity: Build templates for sign-off requests and governance alerts
 
 ### Module 4: Teams/Slack Integration
-- [ ] Task 4.1: Build Teams/Slack notification connectors
-  - [ ] Subtask 4.1.1: Webhook-based integration
-    - [ ] Activity: Slack incoming webhook connector
-    - [ ] Activity: Teams incoming webhook connector
+- [x] Task 4.1: Build Teams/Slack notification connectors
+  - [x] Subtask 4.1.1: Webhook-based integration
+    - [x] Activity: Slack incoming webhook connector — `WebhookConnectorModule` (`apps/api/src/webhook-connectors`), `provider: SLACK`, the org pastes a Slack-generated incoming-webhook URL (no OAuth app registration needed on our side); `ADMIN`-only CRUD, `apps/web/src/app/dashboard/webhooks` UI
+    - [x] Activity: Teams incoming webhook connector — same `WebhookConnectorModule`, `provider: TEAMS`; the URL is AES-256-GCM-encrypted at rest (see Phase 9 Module 5) and never returned by the API once set; wired as the first real producer into Deployment Governance decisions (Phase 6 Module 12)
 
 ### Module 5: Jira Integration
 - [ ] Task 5.1: Build Jira sync connector
@@ -58,13 +58,14 @@
 
 ### Module 9: SDK
 - [ ] Task 9.1: Publish a platform SDK
-  - [ ] Subtask 9.1.1: Generate a typed client from the OpenAPI spec
-    - [ ] Activity: Publish `@epg/sdk` generated from Phase 4's OpenAPI spec
+  - [x] Subtask 9.1.1: Generate a typed client from the OpenAPI spec
+    - [x] Activity: Publish the OpenAPI spec itself — `@nestjs/swagger` wired in `apps/api/src/main.ts`, `GET /api-docs` (Swagger UI) and `GET /api-docs-json` (raw spec), also closing Phase 4's "OpenAPI Specification" deliverable
+    - [ ] Activity: Publish `@epg/sdk` generated from the spec — not built; deliberately deferred, needs a codegen pipeline decision (tool, publish target, versioning) beyond just having the spec
 
 ### Module 10: Plugin Framework
-- [ ] Task 10.1: Build an extension/plugin framework
-  - [ ] Subtask 10.1.1: Define plugin manifest + lifecycle hooks
-    - [ ] Activity: Draft plugin manifest schema and a sample plugin
+- [x] Task 10.1: Build an extension/plugin framework
+  - [x] Subtask 10.1.1: Define plugin manifest + lifecycle hooks
+    - [x] Activity: Draft plugin manifest schema and a sample plugin — `PluginModule` (`apps/api/src/plugins`), org-level manifest registry (`name`, `version`, `description`, free-form `manifest: Json`, `isEnabled` toggle), `ADMIN`-only write, audit-logged (`PLUGIN_REGISTERED`, `PLUGIN_TOGGLED`); `apps/web/src/app/dashboard/plugins` UI. A real execution sandbox/lifecycle-hook runtime that actually invokes plugin code is not built — this is metadata storage only
 
 ## Deliverables Checklist
 - [ ] Integration Specifications

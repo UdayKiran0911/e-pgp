@@ -176,3 +176,57 @@ export interface SearchResultBody {
   projectId: string | null;
   snippet: string | null;
 }
+
+export interface WebhookConnectorBody {
+  id: string;
+  organizationId: string;
+  name: string;
+  provider: string;
+  isActive: boolean;
+}
+
+export interface PluginManifestBody {
+  id: string;
+  organizationId: string;
+  name: string;
+  version: string;
+  isEnabled: boolean;
+}
+
+export interface SecurityFindingBody {
+  id: string;
+  organizationId: string;
+  projectId: string;
+  title: string;
+  severity: string;
+  status: string;
+}
+
+export interface RequirementAnalysisBody {
+  requirementId: string;
+  title: string;
+  flags: string[];
+}
+
+export interface ProjectHealthScoreBody {
+  projectId: string;
+  score: number;
+  band: string;
+  signals: Record<string, number>;
+}
+
+export interface AuditSummaryBody {
+  totalActions: number;
+  byAction: Record<string, number>;
+}
+
+export interface AnalyticsOverviewBody {
+  governanceHealth: {
+    averageScore: number;
+    healthy: number;
+    atRisk: number;
+    critical: number;
+  };
+  auditReadiness: { gateCompletionRate: number; signoffCompletionRate: number };
+  adoption: Record<string, { total: number; last30Days: number }>;
+}

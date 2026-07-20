@@ -14,17 +14,23 @@
 ### Module 2: Requirement Analyzer
 - [ ] Task 2.1: Build AI-assisted requirement analysis
   - [ ] Subtask 2.1.1: Prompt design for gap/ambiguity detection
-    - [ ] Activity: Draft prompts that flag ambiguous or missing requirements
+    - [ ] Activity: Draft prompts that flag ambiguous or missing requirements — not built; deliberately deferred, no LLM integration decision made yet (see Module 1)
+  - [x] Subtask 2.1.2: Rule-based analyzer MVP
+    - [x] Activity: `RequirementsService.analyze()` (`apps/api/src/requirements/requirements.service.ts`) — flags missing description, too-short title, duplicate title within a project, and stale `DRAFT`s (>30 days); `GET /requirements/analysis?projectId=`; surfaced as a "Flags" column on the Requirements tab of the project detail page
 
 ### Module 3: AI Audit Assistant
 - [ ] Task 3.1: Build an AI assistant over the audit trail
   - [ ] Subtask 3.1.1: Summarize audit history on demand
-    - [ ] Activity: Prototype "explain this project's audit trail" prompt + retrieval
+    - [ ] Activity: Prototype "explain this project's audit trail" prompt + retrieval — not built; deliberately deferred, no LLM integration decision made yet (see Module 1)
+  - [x] Subtask 3.1.2: Computed summary MVP
+    - [x] Activity: `AuditLogService.summarize()` — total + per-action counts, optionally project-scoped; `GET /audit-logs/summary`, restricted to `ADMIN`/`GOVERNANCE_LEAD`/`AUDITOR`; surfaced as a summary card on the Audit Log page
 
 ### Module 4: AI Risk Prediction
 - [ ] Task 4.1: Build predictive risk scoring
   - [ ] Subtask 4.1.1: Define risk signal inputs
-    - [ ] Activity: Identify signals (overdue tasks, missing sign-offs, churn) feeding a risk score
+    - [x] Activity: Identify signals (overdue tasks, missing sign-offs, churn) feeding a risk score — signals used: open high/critical risks, unresolved high/critical issues, unmet governance gates, pending customer sign-offs, blocked deployments
+  - [x] Subtask 4.1.2: Heuristic scoring MVP
+    - [x] Activity: `ProjectHealthService` (`apps/api/src/project-health`) — a weighted-deduction score (0-100) banded into HEALTHY/AT_RISK/CRITICAL from the signals above, not a trained model; `GET /projects/:projectId/health-score`; surfaced as a badge in the project detail page header and rolled up org-wide in Analytics (Module 8)
 
 ### Module 5: Meeting Summarization
 - [ ] Task 5.1: Build meeting summarization for governance reviews
@@ -46,9 +52,9 @@
     - [x] Activity: `SearchModule` (`apps/api/src/search`) — aggregates a case-insensitive `contains` query across every text-bearing register (Risk, Issue, Decision, Change Request, Requirement, Review, Document, SOP, Knowledge Article, Department, Customer Sign-off), org-scoped, capped per type; `apps/web/src/app/dashboard/search` UI with results linking back into the owning project
 
 ### Module 8: Analytics
-- [ ] Task 8.1: Build the analytics module
-  - [ ] Subtask 8.1.1: Define core analytics dashboards
-    - [ ] Activity: Design governance health, audit-readiness, and adoption dashboards
+- [x] Task 8.1: Build the analytics module
+  - [x] Subtask 8.1.1: Define core analytics dashboards
+    - [x] Activity: `AnalyticsService` (`apps/api/src/analytics`) — governance health (average `ProjectHealthService` score + HEALTHY/AT_RISK/CRITICAL counts across the org), audit readiness (governance-gate and customer-sign-off completion rates), and adoption (total vs. last-30-days counts per register); `GET /analytics/overview`, restricted to `ADMIN`/`GOVERNANCE_LEAD`/`AUDITOR`; dashboard UI at `apps/web/src/app/dashboard/analytics`, new sidebar nav entry
 
 ## Deliverables Checklist
 - [ ] AI Architecture

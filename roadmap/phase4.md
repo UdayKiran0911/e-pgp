@@ -21,11 +21,11 @@
     - [ ] Activity: Keep diagram in sync each time the schema changes
 
 ### Module 3: API Design
-- [ ] Task 3.1: Design the REST API surface
-  - [ ] Subtask 3.1.1: Define resource-oriented routes per module
-    - [ ] Activity: Draft OpenAPI spec for Organization/User/Project resources
-  - [ ] Subtask 3.1.2: Adopt NestJS OpenAPI (Swagger) generation
-    - [ ] Activity: Add `@nestjs/swagger` and decorate controllers/DTOs
+- [x] Task 3.1: Design the REST API surface
+  - [x] Subtask 3.1.1: Define resource-oriented routes per module
+    - [x] Activity: Draft OpenAPI spec for Organization/User/Project resources — superseded by auto-generation (Subtask 3.1.2) covering every resource in the platform, not just these three, so no separate hand-drafted spec was written
+  - [x] Subtask 3.1.2: Adopt NestJS OpenAPI (Swagger) generation
+    - [x] Activity: Add `@nestjs/swagger` and decorate controllers/DTOs — `SwaggerModule` wired in `apps/api/src/main.ts` (`GET /api-docs` UI, `GET /api-docs-json` spec, see Phase 8 Module 9); the spec is inferred from existing controller routes and class-validator DTOs rather than explicit `@ApiProperty`/`@ApiOperation` decoration on every field — good enough for a browsable/consumable spec, richer per-field documentation is a follow-up
 
 ### Module 4: Search Architecture
 - [ ] Task 4.1: Design enterprise search (feeds Phase 7)
@@ -54,5 +54,5 @@
 ## Deliverables Checklist
 - [ ] ER Diagrams
 - [ ] Database Dictionary
-- [ ] OpenAPI Specification
+- [x] OpenAPI Specification — live-generated, not a static document: `GET /api-docs-json` off the running API (see Module 3)
 - [ ] API Documentation

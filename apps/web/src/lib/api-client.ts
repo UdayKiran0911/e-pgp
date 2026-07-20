@@ -1,5 +1,7 @@
 import type {
+  AnalyticsOverview,
   AuditLogEntry,
+  AuditSummary,
   AuthResponse,
   ChangeRequest,
   ChecklistItem,
@@ -13,12 +15,15 @@ import type {
   CreateGovernanceGateInput,
   CreateIssueInput,
   CreateKnowledgeArticleInput,
+  CreatePluginManifestInput,
   CreateProjectInput,
   CreateRequirementInput,
   CreateReviewInput,
   CreateRiskInput,
+  CreateSecurityFindingInput,
   CreateSopInput,
   CreateUserInput,
+  CreateWebhookConnectorInput,
   CustomerSignoff,
   Decision,
   Department,
@@ -30,13 +35,17 @@ import type {
   LoginInput,
   Notification,
   Organization,
+  PluginManifest,
   Project,
+  ProjectHealthScore,
   PublicUser,
   RegisterInput,
   Requirement,
+  RequirementAnalysis,
   Review,
   Risk,
   SearchResult,
+  SecurityFinding,
   Sop,
   UpdateChangeRequestInput,
   UpdateChecklistItemInput,
@@ -49,12 +58,16 @@ import type {
   UpdateIssueInput,
   UpdateKnowledgeArticleInput,
   UpdateOrganizationInput,
+  UpdatePluginManifestInput,
   UpdateProjectInput,
   UpdateRequirementInput,
   UpdateReviewInput,
   UpdateRiskInput,
+  UpdateSecurityFindingInput,
   UpdateSopInput,
   UpdateUserInput,
+  UpdateWebhookConnectorInput,
+  WebhookConnector,
 } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
@@ -490,4 +503,96 @@ export const api = {
       {},
       token,
     ),
+
+  listWebhookConnectors: (token: string) =>
+    request<WebhookConnector[]>('/webhook-connectors', {}, token),
+
+  createWebhookConnector: (token: string, data: CreateWebhookConnectorInput) =>
+    request<WebhookConnector>(
+      '/webhook-connectors',
+      { method: 'POST', body: JSON.stringify(data) },
+      token,
+    ),
+
+  updateWebhookConnector: (
+    token: string,
+    id: string,
+    data: UpdateWebhookConnectorInput,
+  ) =>
+    request<WebhookConnector>(
+      `/webhook-connectors/${id}`,
+      { method: 'PATCH', body: JSON.stringify(data) },
+      token,
+    ),
+
+  listPlugins: (token: string) =>
+    request<PluginManifest[]>('/plugins', {}, token),
+
+  createPlugin: (token: string, data: CreatePluginManifestInput) =>
+    request<PluginManifest>(
+      '/plugins',
+      { method: 'POST', body: JSON.stringify(data) },
+      token,
+    ),
+
+  updatePlugin: (token: string, id: string, data: UpdatePluginManifestInput) =>
+    request<PluginManifest>(
+      `/plugins/${id}`,
+      { method: 'PATCH', body: JSON.stringify(data) },
+      token,
+    ),
+
+  listSecurityFindings: (token: string, projectId: string) =>
+    request<SecurityFinding[]>(
+      `/security-findings?projectId=${projectId}`,
+      {},
+      token,
+    ),
+
+  createSecurityFinding: (token: string, data: CreateSecurityFindingInput) =>
+    request<SecurityFinding>(
+      '/security-findings',
+      { method: 'POST', body: JSON.stringify(data) },
+      token,
+    ),
+
+  updateSecurityFinding: (
+    token: string,
+    id: string,
+    data: UpdateSecurityFindingInput,
+  ) =>
+    request<SecurityFinding>(
+      `/security-findings/${id}`,
+      { method: 'PATCH', body: JSON.stringify(data) },
+      token,
+    ),
+
+  analyzeRequirements: (token: string, projectId: string) =>
+    request<RequirementAnalysis[]>(
+      `/requirements/analysis?projectId=${projectId}`,
+      {},
+      token,
+    ),
+
+  getProjectHealthScore: (token: string, projectId: string) =>
+    request<ProjectHealthScore>(
+      `/projects/${projectId}/health-score`,
+      {},
+      token,
+    ),
+
+  getAuditSummary: (token: string, projectId?: string) =>
+    request<AuditSummary>(
+      projectId
+        ? `/audit-logs/summary?projectId=${projectId}`
+        : '/audit-logs/summary',
+      {},
+      token,
+    ),
+
+  getAnalyticsOverview: (token: string) =>
+    request<AnalyticsOverview>('/analytics/overview', {}, token),
+
+  exportOrganizationData: (token: string) =>
+    request<Record<string, unknown>>('/organizations/me/export', {}, token),
 };

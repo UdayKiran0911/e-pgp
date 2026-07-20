@@ -25,6 +25,12 @@ import { DeploymentApprovalsModule } from './deployment-approvals/deployment-app
 import { NotificationsModule } from './notifications/notifications.module';
 import { KnowledgeArticlesModule } from './knowledge-articles/knowledge-articles.module';
 import { SearchModule } from './search/search.module';
+import { EncryptionModule } from './encryption/encryption.module';
+import { WebhookConnectorsModule } from './webhook-connectors/webhook-connectors.module';
+import { PluginsModule } from './plugins/plugins.module';
+import { SecurityFindingsModule } from './security-findings/security-findings.module';
+import { ProjectHealthModule } from './project-health/project-health.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -52,6 +58,12 @@ import { SearchModule } from './search/search.module';
     NotificationsModule,
     KnowledgeArticlesModule,
     SearchModule,
+    EncryptionModule,
+    WebhookConnectorsModule,
+    PluginsModule,
+    SecurityFindingsModule,
+    ProjectHealthModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

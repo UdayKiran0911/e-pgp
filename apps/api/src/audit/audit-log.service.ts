@@ -39,4 +39,25 @@ export class AuditLogService {
       take: 200,
     });
   }
+
+  // AI Audit Assistant (Phase 7 Module 3), simplified: a computed summary
+  // (total + per-action counts, optionally scoped to a project) rather
+  // than a free-form "explain this project's audit trail" LLM answer. A
+  // real AI-backed assistant is a separate decision, deliberately not
+  // made here.
+  async summarize(organizationId: string, projectId?: string) {
+    const where = { organizationId, ...(projectId ? { projectId } : {}) };
+    const [totalActions, grouped] = await Promise.all([
+      this.prisma.auditLog.count({ where }),
+      this.prisma.auditLog.groupBy({
+        by: ['action'],
+        where,
+        _count: { action: true },
+      }),
+    ]);
+    const byAction = Object.fromEntries(
+      grouped.map((g) => [g.action, g._count.action]),
+    );
+    return { totalActions, byAction };
+  }
 }

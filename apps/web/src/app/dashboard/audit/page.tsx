@@ -1,21 +1,22 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Alert, Card, Table, Tag, Typography } from 'antd';
+import { Alert, Card, Space, Statistic, Table, Tag, Typography } from 'antd';
 import { useAuth } from '@/lib/auth-context';
 import { api, ApiError } from '@/lib/api-client';
 import { semanticColor, spacing } from '@epg/design-tokens';
 import { glassPanelStyle } from '@/lib/ui-style';
-import type { AuditLogEntry, PublicUser } from '@/lib/types';
+import type { AuditLogEntry, AuditSummary, PublicUser } from '@/lib/types';
 
 const { Text } = Typography;
 
 async function fetchAuditData(token: string) {
-  const [auditLogs, users] = await Promise.all([
+  const [auditLogs, users, summary] = await Promise.all([
     api.listAuditLogs(token),
     api.listUsers(token),
+    api.getAuditSummary(token),
   ]);
-  return { auditLogs, users };
+  return { auditLogs, users, summary };
 }
 
 function actorLabel(actorId: string, users: PublicUser[]): string {
@@ -27,6 +28,7 @@ export default function AuditLogPage() {
   const { token } = useAuth();
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [users, setUsers] = useState<PublicUser[]>([]);
+  const [summary, setSummary] = useState<AuditSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,10 +36,11 @@ export default function AuditLogPage() {
     if (!token) return;
     let cancelled = false;
     fetchAuditData(token)
-      .then(({ auditLogs: logs, users: userList }) => {
+      .then(({ auditLogs: logs, users: userList, summary: summaryData }) => {
         if (cancelled) return;
         setAuditLogs(logs);
         setUsers(userList);
+        setSummary(summaryData);
         setError(null);
       })
       .catch((err: unknown) => {
@@ -65,6 +68,25 @@ export default function AuditLogPage() {
           showIcon
           style={{ marginBottom: spacing[4] }}
         />
+      )}
+
+      {summary && (
+        <Card
+          style={{ ...glassPanelStyle, marginBottom: spacing[4] }}
+          title="Audit Trail Summary"
+        >
+          <Statistic title="Total governed actions" value={summary.totalActions} />
+          <Space wrap style={{ marginTop: spacing[3] }}>
+            {Object.entries(summary.byAction)
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 8)
+              .map(([action, count]) => (
+                <Tag key={action} color={semanticColor.brand}>
+                  {action}: {count}
+                </Tag>
+              ))}
+          </Space>
+        </Card>
       )}
 
       <Card style={glassPanelStyle} title="Audit Log">

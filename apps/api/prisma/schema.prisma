@@ -36,6 +36,9 @@ model Organization {
   deploymentApprovals DeploymentApproval[]
   notifications       Notification[]
   knowledgeArticles   KnowledgeArticle[]
+  webhookConnectors   WebhookConnector[]
+  pluginManifests     PluginManifest[]
+  securityFindings    SecurityFinding[]
 }
 
 model User {
@@ -81,6 +84,7 @@ model Project {
   customerSignoffs CustomerSignoff[]
   deploymentApprovals DeploymentApproval[]
   notifications       Notification[]
+  securityFindings    SecurityFinding[]
 }
 
 enum ProjectStatus {
@@ -440,6 +444,78 @@ model KnowledgeArticle {
   content        String
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+}
+
+// Teams/Slack Integration (Phase 8 Module 4), simplified: an outbound
+// incoming-webhook connector (the org pastes a Slack/Teams-generated
+// webhook URL — no OAuth app registration on our side). `encryptedUrl` is
+// AES-256-GCM ciphertext (see apps/api/src/encryption), never stored or
+// returned in plaintext. Two-way sync connectors (Jira, Azure DevOps,
+// SharePoint, ServiceNow) need real OAuth/PAT credentials and are not
+// built here.
+model WebhookConnector {
+  id             String          @id @default(uuid())
+  organizationId String
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  name           String
+  provider       WebhookProvider
+  encryptedUrl   String
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+enum WebhookProvider {
+  SLACK
+  TEAMS
+}
+
+// Plugin Framework (Phase 8 Module 10), simplified: a manifest registry
+// (ADMIN registers/enables/disables a plugin's declared metadata) rather
+// than a real execution sandbox/lifecycle-hook runtime — that's a
+// separate, much larger infra decision, deliberately not made here.
+model PluginManifest {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  version        String
+  description    String?
+  manifest       Json
+  isEnabled      Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+// Vulnerability Management (Phase 9): a security findings register,
+// project-scoped, same CRUD+severity+status shape as Risk/Issue.
+model SecurityFinding {
+  id             String                  @id @default(uuid())
+  organizationId String
+  organization   Organization            @relation(fields: [organizationId], references: [id])
+  projectId      String
+  project        Project                 @relation(fields: [projectId], references: [id])
+  title          String
+  description    String?
+  severity       SecurityFindingSeverity
+  status         SecurityFindingStatus   @default(OPEN)
+  discoveredAt   DateTime                @default(now())
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+}
+
+enum SecurityFindingSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SecurityFindingStatus {
+  OPEN
+  IN_REMEDIATION
+  RESOLVED
+  ACCEPTED_RISK
 }
 
 // Append-only audit trail — every governed action within an organization is

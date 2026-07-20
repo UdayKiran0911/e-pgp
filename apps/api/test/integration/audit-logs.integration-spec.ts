@@ -6,6 +6,7 @@ import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import {
   AuditLogBody,
+  AuditSummaryBody,
   AuthResponseBody,
   ProjectBody,
   PublicUserBody,
@@ -165,5 +166,24 @@ describe('Audit Logs (integration)', () => {
     expect(response.status).toBe(200);
     const body = response.body as AuditLogBody[];
     expect(body.some((entry) => entry.organizationId === orgAId)).toBe(false);
+  });
+
+  it('summarizes the audit trail with a PROJECT_CREATED count of at least 1', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/audit-logs/summary')
+      .set('Authorization', `Bearer ${orgAAdminToken}`);
+
+    expect(response.status).toBe(200);
+    const body = response.body as AuditSummaryBody;
+    expect(body.totalActions).toBeGreaterThan(0);
+    expect(body.byAction.PROJECT_CREATED).toBeGreaterThanOrEqual(1);
+  });
+
+  it('rejects a MEMBER reading the audit summary', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/audit-logs/summary')
+      .set('Authorization', `Bearer ${memberToken}`);
+
+    expect(response.status).toBe(403);
   });
 });

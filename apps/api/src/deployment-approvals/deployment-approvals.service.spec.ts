@@ -3,6 +3,7 @@ import { DeploymentApprovalsService } from './deployment-approvals.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { WebhookConnectorsService } from '../webhook-connectors/webhook-connectors.service';
 import { DeploymentStatus } from '../../generated/prisma/client';
 
 interface NotifyCallArgs {
@@ -28,6 +29,7 @@ describe('DeploymentApprovalsService', () => {
   };
   let auditLog: { record: jest.Mock };
   let notifications: { notify: jest.Mock<unknown, [NotifyCallArgs]> };
+  let webhooks: { notify: jest.Mock<unknown, [string, string]> };
 
   const orgId = 'org-1';
   const actorId = 'user-1';
@@ -59,10 +61,12 @@ describe('DeploymentApprovalsService', () => {
     };
     auditLog = { record: jest.fn() };
     notifications = { notify: jest.fn<unknown, [NotifyCallArgs]>() };
+    webhooks = { notify: jest.fn<unknown, [string, string]>() };
     service = new DeploymentApprovalsService(
       prisma as unknown as PrismaService,
       auditLog as unknown as AuditLogService,
       notifications as unknown as NotificationsService,
+      webhooks as unknown as WebhookConnectorsService,
     );
   });
 
@@ -119,6 +123,7 @@ describe('DeploymentApprovalsService', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(prisma.deploymentApproval.update).not.toHaveBeenCalled();
     expect(notifications.notify).not.toHaveBeenCalled();
+    expect(webhooks.notify).not.toHaveBeenCalled();
   });
 
   it('approves once every gate is met and every sign-off is received, and notifies the requester', async () => {
@@ -148,6 +153,10 @@ describe('DeploymentApprovalsService', () => {
       expect.objectContaining({ recipientId: requesterId }),
     );
     expect(notifications.notify.mock.calls[0][0].title).toContain('approved');
+    expect(webhooks.notify).toHaveBeenCalledWith(
+      orgId,
+      expect.stringContaining('approved'),
+    );
   });
 
   it('blocking a request does not require governance checks and still notifies the requester', async () => {
@@ -171,5 +180,9 @@ describe('DeploymentApprovalsService', () => {
       }),
     );
     expect(notifications.notify.mock.calls[0][0].title).toContain('blocked');
+    expect(webhooks.notify).toHaveBeenCalledWith(
+      orgId,
+      expect.stringContaining('blocked'),
+    );
   });
 });

@@ -127,4 +127,82 @@ describe('RequirementsService', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.requirement.update).not.toHaveBeenCalled();
   });
+
+  describe('analyze', () => {
+    it('flags a requirement with no description and a too-short title', async () => {
+      prisma.requirement.findMany.mockResolvedValue([
+        { ...requirement, title: 'Login', description: null },
+      ]);
+
+      const [result] = await service.analyze(orgId, project.id);
+
+      expect(result.flags).toEqual(
+        expect.arrayContaining(['MISSING_DESCRIPTION', 'TITLE_TOO_SHORT']),
+      );
+    });
+
+    it('does not flag a complete, recently-created requirement', async () => {
+      prisma.requirement.findMany.mockResolvedValue([
+        {
+          ...requirement,
+          title: 'Support single sign-on via SAML',
+          description: 'Users must be able to log in via the corporate IdP.',
+          createdAt: new Date(),
+        },
+      ]);
+
+      const [result] = await service.analyze(orgId, project.id);
+
+      expect(result.flags).toEqual([]);
+    });
+
+    it('flags requirements that share a title within the same project', async () => {
+      prisma.requirement.findMany.mockResolvedValue([
+        { ...requirement, id: 'req-1', title: 'Support SSO login' },
+        { ...requirement, id: 'req-2', title: 'support sso login  ' },
+      ]);
+
+      const results = await service.analyze(orgId, project.id);
+
+      expect(results.every((r) => r.flags.includes('DUPLICATE_TITLE'))).toBe(
+        true,
+      );
+    });
+
+    it('flags a DRAFT requirement older than the staleness threshold', async () => {
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 45);
+      prisma.requirement.findMany.mockResolvedValue([
+        {
+          ...requirement,
+          title: 'Support single sign-on via SAML',
+          description: 'Users must be able to log in via the corporate IdP.',
+          status: RequirementStatus.DRAFT,
+          createdAt: oldDate,
+        },
+      ]);
+
+      const [result] = await service.analyze(orgId, project.id);
+
+      expect(result.flags).toContain('STALE_DRAFT');
+    });
+
+    it('does not flag an APPROVED requirement as stale regardless of age', async () => {
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 45);
+      prisma.requirement.findMany.mockResolvedValue([
+        {
+          ...requirement,
+          title: 'Support single sign-on via SAML',
+          description: 'Users must be able to log in via the corporate IdP.',
+          status: RequirementStatus.APPROVED,
+          createdAt: oldDate,
+        },
+      ]);
+
+      const [result] = await service.analyze(orgId, project.id);
+
+      expect(result.flags).not.toContain('STALE_DRAFT');
+    });
+  });
 });

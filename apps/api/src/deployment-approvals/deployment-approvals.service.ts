@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditLogService } from '../audit/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { WebhookConnectorsService } from '../webhook-connectors/webhook-connectors.service';
 import { CreateDeploymentApprovalDto } from './dto/create-deployment-approval.dto';
 import { UpdateDeploymentApprovalDto } from './dto/update-deployment-approval.dto';
 import { isValidDeploymentTransition } from './deployment-status';
@@ -17,6 +18,7 @@ export class DeploymentApprovalsService {
     private readonly prisma: PrismaService,
     private readonly auditLog: AuditLogService,
     private readonly notifications: NotificationsService,
+    private readonly webhooks: WebhookConnectorsService,
   ) {}
 
   findAllInOrganization(organizationId: string, projectId?: string) {
@@ -111,6 +113,12 @@ export class DeploymentApprovalsService {
             : `Deployment "${approval.title}" blocked`,
         body: dto.status === DeploymentStatus.BLOCKED ? dto.notes : undefined,
       });
+      await this.webhooks.notify(
+        organizationId,
+        dto.status === DeploymentStatus.APPROVED
+          ? `Deployment "${approval.title}" approved.`
+          : `Deployment "${approval.title}" blocked.`,
+      );
     }
 
     return approval;

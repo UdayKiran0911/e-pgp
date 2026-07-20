@@ -31,6 +31,9 @@ import {
   BulbOutlined,
   SearchOutlined,
   BellOutlined,
+  BarChartOutlined,
+  ApiOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons';
 import { RequireAuth } from '@/components/require-auth';
 import { useAuth } from '@/lib/auth-context';
@@ -124,6 +127,25 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             key: '/dashboard/audit',
             icon: <AuditOutlined />,
             label: <Link href="/dashboard/audit">Audit Log</Link>,
+          },
+          {
+            key: '/dashboard/analytics',
+            icon: <BarChartOutlined />,
+            label: <Link href="/dashboard/analytics">Analytics</Link>,
+          },
+        ]
+      : []),
+    ...(user?.role === 'ADMIN'
+      ? [
+          {
+            key: '/dashboard/webhooks',
+            icon: <ApiOutlined />,
+            label: <Link href="/dashboard/webhooks">Webhooks</Link>,
+          },
+          {
+            key: '/dashboard/plugins',
+            icon: <AppstoreOutlined />,
+            label: <Link href="/dashboard/plugins">Plugins</Link>,
           },
         ]
       : []),
