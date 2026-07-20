@@ -10,6 +10,8 @@ Format: `YYYY-MM-DD | <short-hash> | <description>`
 
 <!-- Newest entries at the top -->
 
+2026-07-20 | 788311f | Add 10 modules: Document Versioning (`DocumentVersion` history + re-upload), Project custom metadata (`metadata Json?`), Audit Log tamper-evidence (per-org SHA-256 hash chain + `/audit-logs/verify`), a real generated `@epg/sdk` typed client, `ExternalReference` links (Jira/Azure DevOps/SharePoint/ServiceNow), `GovernanceNotifierService` extracted and wired into Change Requests, Kubernetes environment overlays, Grafana/Prometheus config-as-code, non-blocking CI vulnerability scanning (`pnpm audit` + Trivy), and a generated `docs/ER_DIAGRAM.md`.
+
 2026-07-20 | def7331 | Add 10 modules: Checklist Templates (org-level, applied to a project via snapshot copy — closes out Checklist Engine), native document upload/download (`StorageProvider` interface + `LocalDiskStorageService`), Email Engine outbox (`EmailLog`, 4th Deployment Governance notification channel), structured logging (pino), Prometheus metrics, base Kubernetes manifests, a GHCR image-publish CD job, a k6 load-testing script, and `CONTRIBUTING.md`. Also fixed a real WCAG AA contrast failure (`warning` token) found by a new `scripts/contrast-audit.js`.
 
 2026-07-20 | ffbe76c | Add 10 modules across Phases 7-9: Requirement Analyzer, AI Audit Assistant, and AI Risk Prediction as rule-based/computed/heuristic MVPs (no LLM integration decision made) plus org-wide Analytics; Slack/Teams webhook connectors with AES-256-GCM-encrypted secrets; Plugin Framework manifest registry; Security Findings register; live OpenAPI spec; on-demand Organization data export.
